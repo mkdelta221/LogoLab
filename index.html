@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogoLab - Learn Programming with Turtle Graphics</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐢</text></svg>">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header id="header">
+            <div class="header-left">
+                <h1>LogoLab</h1>
+                <span class="tagline">Learn Programming with Turtle Graphics</span>
+            </div>
+            <div class="header-right">
+                <button id="btn-run" class="btn btn-primary" title="Run (Ctrl+Enter)">
+                    <span class="icon">▶</span> Run
+                </button>
+                <button id="btn-stop" class="btn btn-danger" title="Stop" disabled>
+                    <span class="icon">■</span> Stop
+                </button>
+                <button id="btn-clear" class="btn" title="Clear Canvas">
+                    <span class="icon">🗑</span> Clear
+                </button>
+                <button id="btn-help" class="btn" title="Help">
+                    <span class="icon">?</span> Help
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="main">
+            <!-- Code Editor Panel -->
+            <div id="editor-panel" class="panel">
+                <div class="panel-header">
+                    <span>Code Editor</span>
+                    <div class="panel-actions">
+                        <button id="btn-examples" class="btn-small" title="Load Example">Examples</button>
+                    </div>
+                </div>
+                <div id="editor-container">
+                    <div id="line-numbers"></div>
+                    <textarea id="code-editor" spellcheck="false" placeholder="Type your Logo code here...
+
+Try: REPEAT 4 [FD 100 RT 90]"></textarea>
+                </div>
+            </div>
+
+            <!-- Canvas Panel -->
+            <div id="canvas-panel" class="panel">
+                <div class="panel-header">
+                    <span>Canvas</span>
+                    <div class="panel-actions">
+                        <span id="coordinates" class="coordinates">X: 0, Y: 0</span>
+                        <button id="btn-zoom-in" class="btn-small" title="Zoom In">+</button>
+                        <button id="btn-zoom-out" class="btn-small" title="Zoom Out">-</button>
+                        <button id="btn-reset-view" class="btn-small" title="Reset View">⌂</button>
+                    </div>
+                </div>
+                <div id="canvas-container">
+                    <canvas id="turtle-canvas"></canvas>
+                </div>
+            </div>
+        </main>
+
+        <!-- Output Panel -->
+        <div id="output-panel" class="panel">
+            <div class="panel-header">
+                <span>Output</span>
+                <div class="panel-actions">
+                    <button id="btn-clear-output" class="btn-small" title="Clear Output">Clear</button>
+                </div>
+            </div>
+            <div id="output-console"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer id="footer">
+            <div class="footer-left">
+                <button id="btn-new" class="btn-small" title="New Project">New</button>
+                <button id="btn-save" class="btn-small" title="Save Project">Save</button>
+                <button id="btn-load" class="btn-small" title="Load Project">Load</button>
+                <input type="file" id="file-input" accept=".logo,.txt" style="display: none;">
+            </div>
+            <div class="footer-center">
+                <a href="https://ko-fi.com/cyborgninja" target="_blank" class="donate-link" title="Support LogoLab">
+                    ☕ Support this project
+                </a>
+            </div>
+            <div class="footer-right">
+                <span>Inspired by <a href="https://fmslogo.sourceforge.io/" target="_blank">FMSLogo</a></span>
+            </div>
+        </footer>
+
+        <!-- Help Modal -->
+        <div id="help-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>LogoLab Command Reference</h2>
+                    <button id="btn-close-help" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="help-tabs">
+                        <button class="help-tab active" data-tab="movement">Movement</button>
+                        <button class="help-tab" data-tab="pen">Pen</button>
+                        <button class="help-tab" data-tab="control">Control</button>
+                        <button class="help-tab" data-tab="procedures">Procedures</button>
+                        <button class="help-tab" data-tab="math">Math</button>
+                        <button class="help-tab" data-tab="lists">Lists</button>
+                    </div>
+                    <div class="help-content">
+                        <div id="help-movement" class="help-section active">
+                            <h3>Turtle Movement</h3>
+                            <table>
+                                <tr><td><code>FORWARD n</code> / <code>FD n</code></td><td>Move forward n steps</td></tr>
+                                <tr><td><code>BACK n</code> / <code>BK n</code></td><td>Move backward n steps</td></tr>
+                                <tr><td><code>LEFT n</code> / <code>LT n</code></td><td>Turn left n degrees</td></tr>
+                                <tr><td><code>RIGHT n</code> / <code>RT n</code></td><td>Turn right n degrees</td></tr>
+                                <tr><td><code>HOME</code></td><td>Return to center, facing up</td></tr>
+                                <tr><td><code>SETPOS [x y]</code></td><td>Move to position [x, y]</td></tr>
+                                <tr><td><code>SETX n</code></td><td>Set X coordinate</td></tr>
+                                <tr><td><code>SETY n</code></td><td>Set Y coordinate</td></tr>
+                                <tr><td><code>SETHEADING n</code> / <code>SETH n</code></td><td>Set heading (0=up, 90=right)</td></tr>
+                                <tr><td><code>XCOR</code></td><td>Returns current X coordinate</td></tr>
+                                <tr><td><code>YCOR</code></td><td>Returns current Y coordinate</td></tr>
+                                <tr><td><code>HEADING</code></td><td>Returns current heading</td></tr>
+                                <tr><td><code>POS</code></td><td>Returns current position [x y]</td></tr>
+                            </table>
+                        </div>
+                        <div id="help-pen" class="help-section">
+                            <h3>Pen Commands</h3>
+                            <table>
+                                <tr><td><code>PENUP</code> / <code>PU</code></td><td>Lift pen (stop drawing)</td></tr>
+                                <tr><td><code>PENDOWN</code> / <code>PD</code></td><td>Lower pen (start drawing)</td></tr>
+                                <tr><td><code>SETPENCOLOR color</code> / <code>SETPC color</code></td><td>Set pen color (name or [r g b])</td></tr>
+                                <tr><td><code>SETPENSIZE n</code></td><td>Set pen width</td></tr>
+                                <tr><td><code>PENERASE</code> / <code>PE</code></td><td>Pen erases instead of draws</td></tr>
+                                <tr><td><code>PENPAINT</code> / <code>PPT</code></td><td>Pen draws normally</td></tr>
+                                <tr><td><code>SETBACKGROUND color</code> / <code>SETBG color</code></td><td>Set background color</td></tr>
+                                <tr><td><code>PENCOLOR</code> / <code>PC</code></td><td>Returns current pen color</td></tr>
+                                <tr><td><code>PENSIZE</code></td><td>Returns current pen size</td></tr>
+                            </table>
+                            <h4>Colors</h4>
+                            <p>Use color names: <code>red</code>, <code>blue</code>, <code>green</code>, <code>yellow</code>, <code>orange</code>, <code>purple</code>, <code>black</code>, <code>white</code>, <code>cyan</code>, <code>magenta</code>, <code>pink</code>, <code>brown</code>, <code>gray</code></p>
+                            <p>Or RGB values: <code>[255 0 0]</code> for red</p>
+                        </div>
+                        <div id="help-control" class="help-section">
+                            <h3>Control Structures</h3>
+                            <table>
+                                <tr><td><code>REPEAT n [...]</code></td><td>Repeat commands n times</td></tr>
+                                <tr><td><code>IF cond [...]</code></td><td>Execute if condition is true</td></tr>
+                                <tr><td><code>IFELSE cond [...] [...]</code></td><td>If-else statement</td></tr>
+                                <tr><td><code>FOR [var start end] [...]</code></td><td>For loop (step=1)</td></tr>
+                                <tr><td><code>FOR [var start end step] [...]</code></td><td>For loop with step</td></tr>
+                                <tr><td><code>WHILE [cond] [...]</code></td><td>While loop</td></tr>
+                                <tr><td><code>STOP</code></td><td>Exit current procedure</td></tr>
+                                <tr><td><code>WAIT n</code></td><td>Pause for n milliseconds</td></tr>
+                            </table>
+                            <h4>Screen Commands</h4>
+                            <table>
+                                <tr><td><code>CLEARSCREEN</code> / <code>CS</code></td><td>Clear screen and reset turtle</td></tr>
+                                <tr><td><code>CLEAN</code></td><td>Clear screen, keep turtle position</td></tr>
+                                <tr><td><code>HIDETURTLE</code> / <code>HT</code></td><td>Hide the turtle</td></tr>
+                                <tr><td><code>SHOWTURTLE</code> / <code>ST</code></td><td>Show the turtle</td></tr>
+                                <tr><td><code>WRAP</code></td><td>Turtle wraps around edges</td></tr>
+                                <tr><td><code>WINDOW</code></td><td>Turtle can go beyond edges</td></tr>
+                                <tr><td><code>FENCE</code></td><td>Turtle stops at edges</td></tr>
+                            </table>
+                        </div>
+                        <div id="help-procedures" class="help-section">
+                            <h3>Procedures & Variables</h3>
+                            <h4>Defining Procedures</h4>
+                            <pre>TO SQUARE :size
+  REPEAT 4 [FD :size RT 90]
+END
+
+SQUARE 100</pre>
+                            <h4>Variables</h4>
+                            <table>
+                                <tr><td><code>MAKE "name value</code></td><td>Create/set variable</td></tr>
+                                <tr><td><code>:name</code></td><td>Get variable value</td></tr>
+                                <tr><td><code>LOCAL "name</code></td><td>Create local variable</td></tr>
+                                <tr><td><code>THING "name</code></td><td>Get variable value (alternative)</td></tr>
+                            </table>
+                            <h4>Procedures with Output</h4>
+                            <pre>TO DOUBLE :n
+  OUTPUT :n * 2
+END
+
+PRINT DOUBLE 5  ; prints 10</pre>
+                            <h4>Multiple Turtles</h4>
+                            <table>
+                                <tr><td><code>TELL n</code></td><td>Select turtle n (creates if needed)</td></tr>
+                                <tr><td><code>ASK n [...]</code></td><td>Run commands with turtle n</td></tr>
+                                <tr><td><code>WHO</code></td><td>Returns current turtle number</td></tr>
+                                <tr><td><code>TURTLES</code></td><td>Returns list of all turtle numbers</td></tr>
+                            </table>
+                        </div>
+                        <div id="help-math" class="help-section">
+                            <h3>Math & Logic</h3>
+                            <h4>Arithmetic</h4>
+                            <table>
+                                <tr><td><code>+ - * /</code></td><td>Basic operations</td></tr>
+                                <tr><td><code>REMAINDER a b</code></td><td>Modulo (a % b)</td></tr>
+                                <tr><td><code>POWER a b</code></td><td>Exponentiation (a^b)</td></tr>
+                                <tr><td><code>SQRT n</code></td><td>Square root</td></tr>
+                                <tr><td><code>ABS n</code></td><td>Absolute value</td></tr>
+                                <tr><td><code>INT n</code></td><td>Integer part</td></tr>
+                                <tr><td><code>ROUND n</code></td><td>Round to nearest integer</td></tr>
+                                <tr><td><code>RANDOM n</code></td><td>Random integer 0 to n-1</td></tr>
+                            </table>
+                            <h4>Trigonometry</h4>
+                            <table>
+                                <tr><td><code>SIN n</code></td><td>Sine (degrees)</td></tr>
+                                <tr><td><code>COS n</code></td><td>Cosine (degrees)</td></tr>
+                                <tr><td><code>TAN n</code></td><td>Tangent (degrees)</td></tr>
+                                <tr><td><code>ARCTAN n</code></td><td>Arc tangent (returns degrees)</td></tr>
+                            </table>
+                            <h4>Comparison & Logic</h4>
+                            <table>
+                                <tr><td><code>= &lt; &gt; &lt;= &gt;= &lt;&gt;</code></td><td>Comparison operators</td></tr>
+                                <tr><td><code>AND a b</code></td><td>Logical AND</td></tr>
+                                <tr><td><code>OR a b</code></td><td>Logical OR</td></tr>
+                                <tr><td><code>NOT a</code></td><td>Logical NOT</td></tr>
+                            </table>
+                            <h4>Output</h4>
+                            <table>
+                                <tr><td><code>PRINT value</code></td><td>Print to output</td></tr>
+                                <tr><td><code>SHOW value</code></td><td>Print with brackets for lists</td></tr>
+                                <tr><td><code>TYPE value</code></td><td>Print without newline</td></tr>
+                            </table>
+                        </div>
+                        <div id="help-lists" class="help-section">
+                            <h3>Lists</h3>
+                            <h4>Creating Lists</h4>
+                            <table>
+                                <tr><td><code>[a b c]</code></td><td>List literal</td></tr>
+                                <tr><td><code>LIST a b</code></td><td>Create list from items</td></tr>
+                                <tr><td><code>SENTENCE a b</code> / <code>SE a b</code></td><td>Combine into flat list</td></tr>
+                                <tr><td><code>FPUT item list</code></td><td>Add item to front</td></tr>
+                                <tr><td><code>LPUT item list</code></td><td>Add item to back</td></tr>
+                            </table>
+                            <h4>Accessing Lists</h4>
+                            <table>
+                                <tr><td><code>FIRST list</code></td><td>First item</td></tr>
+                                <tr><td><code>LAST list</code></td><td>Last item</td></tr>
+                                <tr><td><code>BUTFIRST list</code> / <code>BF list</code></td><td>All but first</td></tr>
+                                <tr><td><code>BUTLAST list</code> / <code>BL list</code></td><td>All but last</td></tr>
+                                <tr><td><code>ITEM n list</code></td><td>Get nth item (1-indexed)</td></tr>
+                                <tr><td><code>COUNT list</code></td><td>Number of items</td></tr>
+                            </table>
+                            <h4>Testing Lists</h4>
+                            <table>
+                                <tr><td><code>EMPTY? list</code></td><td>True if list is empty</td></tr>
+                                <tr><td><code>LIST? value</code></td><td>True if value is a list</td></tr>
+                                <tr><td><code>NUMBER? value</code></td><td>True if value is a number</td></tr>
+                                <tr><td><code>WORD? value</code></td><td>True if value is a word</td></tr>
+                                <tr><td><code>MEMBER? item list</code></td><td>True if item is in list</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Examples Modal -->
+        <div id="examples-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Example Programs</h2>
+                    <button id="btn-close-examples" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="examples-list">
+                        <div class="example-item" data-example="square">
+                            <h4>Square</h4>
+                            <p>Draw a simple square</p>
+                        </div>
+                        <div class="example-item" data-example="star">
+                            <h4>Star</h4>
+                            <p>Draw a 5-pointed star</p>
+                        </div>
+                        <div class="example-item" data-example="spiral">
+                            <h4>Spiral</h4>
+                            <p>Draw a colorful spiral</p>
+                        </div>
+                        <div class="example-item" data-example="flower">
+                            <h4>Flower</h4>
+                            <p>Draw a flower pattern</p>
+                        </div>
+                        <div class="example-item" data-example="tree">
+                            <h4>Recursive Tree</h4>
+                            <p>Draw a fractal tree</p>
+                        </div>
+                        <div class="example-item" data-example="polygon">
+                            <h4>Polygon Procedure</h4>
+                            <p>Define and use a polygon procedure</p>
+                        </div>
+                        <div class="example-item" data-example="rainbow">
+                            <h4>Rainbow</h4>
+                            <p>Draw a colorful rainbow</p>
+                        </div>
+                        <div class="example-item" data-example="sierpinski">
+                            <h4>Sierpinski Triangle</h4>
+                            <p>Draw a fractal triangle</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/interpreter.js"></script>
+    <script src="js/turtle.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
