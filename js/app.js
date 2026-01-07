@@ -224,6 +224,8 @@ class LogoLabApp {
 
         // Clear button - clears canvas, code, and resets everything
         this.btnClear.addEventListener('click', () => {
+            // Stop any running program first
+            this.stop();
             this.editor.clear();
             this.turtle.clearScreen();
             this.interpreter.reset();
@@ -244,6 +246,14 @@ class LogoLabApp {
             item.addEventListener('click', () => {
                 const example = item.dataset.example;
                 if (EXAMPLES[example]) {
+                    // Stop any running program first
+                    this.stop();
+                    // Clear canvas and reset interpreter before loading new example
+                    this.turtle.clearScreen();
+                    this.interpreter.reset();
+                    this.clearOutput();
+                    this.updateVariablesPanel();
+                    // Now load the new example
                     this.editor.setValue(EXAMPLES[example]);
                     this.hideExamples();
                 }
@@ -527,6 +537,13 @@ class LogoLabApp {
             // Add click handlers for "Try It" buttons
             content.querySelectorAll('.try-code').forEach(btn => {
                 btn.addEventListener('click', () => {
+                    // Stop any running program and reset before loading tutorial code
+                    this.stop();
+                    this.turtle.clearScreen();
+                    this.interpreter.reset();
+                    this.clearOutput();
+                    this.updateVariablesPanel();
+                    // Now load the tutorial code
                     const code = btn.dataset.code.replace(/\\n/g, '\n');
                     this.editor.setValue(code);
                     this.hideTutorials();
