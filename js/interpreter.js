@@ -216,6 +216,34 @@ class LogoInterpreter {
         return { list: items, endIndex: i };
     }
 
+    // Convert list items (which may be token objects) to actual values
+    evaluateListItems(items) {
+        const result = [];
+        for (const item of items) {
+            if (Array.isArray(item)) {
+                // Nested list
+                result.push(this.evaluateListItems(item));
+            } else if (item && typeof item === 'object' && item.type) {
+                // Token object - extract value
+                if (item.type === 'NUMBER') {
+                    result.push(item.value);
+                } else if (item.type === 'QUOTED') {
+                    result.push(item.value);
+                } else if (item.type === 'VARREF') {
+                    result.push(this.getVariable(item.value));
+                } else if (item.type === 'WORD') {
+                    result.push(item.value);
+                } else {
+                    result.push(item.value);
+                }
+            } else {
+                // Already a primitive value
+                result.push(item);
+            }
+        }
+        return result;
+    }
+
     // ============== EXPRESSION EVALUATOR ==============
 
     evaluateExpression(tokens, index) {
@@ -317,10 +345,12 @@ class LogoInterpreter {
             return { value: token.value, index: index + 1 };
         }
 
-        // List
+        // List - evaluate items to get actual values
         if (token.type === 'LBRACKET') {
             const listResult = this.parseList(tokens, index + 1);
-            return { value: listResult.list, index: listResult.endIndex };
+            // Convert token objects to actual values
+            const evaluatedList = this.evaluateListItems(listResult.list);
+            return { value: evaluatedList, index: listResult.endIndex };
         }
 
         // Function call or word
@@ -1061,7 +1091,7 @@ class LogoInterpreter {
             throw new Error('TO requires a procedure name');
         }
 
-        const name = tokens[index].value;
+        const name = tokens[index].value.toUpperCase();
         index++;
 
         // Parse parameters
