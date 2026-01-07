@@ -300,13 +300,19 @@ class TurtleGraphics {
 
     // Screen commands
     clearScreen() {
-        this.commands = [];
-        this.home();
+        // Reset all turtles first (before clearing commands, to avoid drawing lines)
         for (const id in this.turtles) {
             this.turtles[id].x = 0;
             this.turtles[id].y = 0;
             this.turtles[id].heading = 0;
+            this.turtles[id].penDown = true;
+            this.turtles[id].penColor = '#000000';
+            this.turtles[id].penSize = 1;
+            this.turtles[id].penMode = 'paint';
+            this.turtles[id].visible = true;
         }
+        // Now clear commands and redraw
+        this.commands = [];
         this.redraw();
     }
 
