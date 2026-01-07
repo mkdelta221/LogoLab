@@ -52,6 +52,7 @@ class LogoInterpreter {
     tokenize(code) {
         const tokens = [];
         let i = 0;
+        let bracketDepth = 0; // Track if we're inside brackets
 
         while (i < code.length) {
             // Skip whitespace
@@ -69,11 +70,13 @@ class LogoInterpreter {
             // List brackets
             if (code[i] === '[') {
                 tokens.push({ type: 'LBRACKET', value: '[' });
+                bracketDepth++;
                 i++;
                 continue;
             }
             if (code[i] === ']') {
                 tokens.push({ type: 'RBRACKET', value: ']' });
+                bracketDepth--;
                 i++;
                 continue;
             }
@@ -101,9 +104,13 @@ class LogoInterpreter {
             if (code[i] === '-') {
                 // Check if it's a negative number
                 if (i + 1 < code.length && /\d/.test(code[i + 1])) {
-                    // Check if previous token suggests this is subtraction
+                    // Inside brackets, always treat as negative number (e.g., [-150 -10])
+                    // Outside brackets, check context to decide
                     const prev = tokens[tokens.length - 1];
-                    if (prev && (prev.type === 'NUMBER' || prev.type === 'WORD' || prev.type === 'RPAREN' || prev.type === 'RBRACKET')) {
+                    const isSubtraction = bracketDepth === 0 && prev &&
+                        (prev.type === 'NUMBER' || prev.type === 'WORD' || prev.type === 'RPAREN' || prev.type === 'RBRACKET');
+
+                    if (isSubtraction) {
                         tokens.push({ type: 'OPERATOR', value: '-' });
                         i++;
                         continue;
