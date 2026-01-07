@@ -83,30 +83,38 @@ PU RT 90 FD 120 LT 90 PD
 SETPC "green
 POLYGON 6 50`,
 
-    rainbow: `; Draw a rainbow
-TO ARC :radius :color
-  SETPC :color
-  SETPENSIZE 15
-  REPEAT 90 [
-    FD :radius * 3.14159 / 90
-    RT 1
-  ]
-END
+    rainbow: `; Draw a rainbow with colored stripes
+SETPENSIZE 10
 
-PU SETPOS [-200 -50] PD
-SETH 0
+; Red stripe
+SETPC "red
+PU SETPOS [-150 50] SETH 90 PD
+FD 300
 
-ARC 100 "red
-PU HOME SETPOS [-200 -50] SETH 0 PD
-ARC 115 "orange
-PU HOME SETPOS [-200 -50] SETH 0 PD
-ARC 130 "yellow
-PU HOME SETPOS [-200 -50] SETH 0 PD
-ARC 145 "green
-PU HOME SETPOS [-200 -50] SETH 0 PD
-ARC 160 "blue
-PU HOME SETPOS [-200 -50] SETH 0 PD
-ARC 175 "purple
+; Orange stripe
+SETPC "orange
+PU SETPOS [-150 30] SETH 90 PD
+FD 300
+
+; Yellow stripe
+SETPC "yellow
+PU SETPOS [-150 10] SETH 90 PD
+FD 300
+
+; Green stripe
+SETPC "green
+PU SETPOS [-150 -10] SETH 90 PD
+FD 300
+
+; Blue stripe
+SETPC "blue
+PU SETPOS [-150 -30] SETH 90 PD
+FD 300
+
+; Purple stripe
+SETPC "purple
+PU SETPOS [-150 -50] SETH 90 PD
+FD 300
 
 SETPENSIZE 1
 HT`,
