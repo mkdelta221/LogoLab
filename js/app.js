@@ -480,10 +480,14 @@ class LogoLabApp {
     }
 
     stop() {
+        const wasRunning = this.interpreter.running;
         this.interpreter.stop();
         this.btnRun.disabled = false;
         this.btnStop.disabled = true;
-        this.appendOutput('Stopped.\n', false, 'info');
+        // Only show "Stopped" message if something was actually running
+        if (wasRunning) {
+            this.appendOutput('Stopped.\n', false, 'info');
+        }
     }
 
     appendOutput(text, isError = false, className = '') {
