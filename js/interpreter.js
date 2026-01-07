@@ -103,6 +103,15 @@ class LogoInterpreter {
                         i++;
                         continue;
                     }
+                    // It's a negative number - parse it
+                    i++; // skip the minus
+                    let num = '-';
+                    while (i < code.length && (/\d/.test(code[i]) || code[i] === '.')) {
+                        num += code[i];
+                        i++;
+                    }
+                    tokens.push({ type: 'NUMBER', value: parseFloat(num) });
+                    continue;
                 }
                 tokens.push({ type: 'OPERATOR', value: '-' });
                 i++;
