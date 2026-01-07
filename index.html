@@ -16,17 +16,36 @@
                 <span class="tagline">Learn Programming with Turtle Graphics</span>
             </div>
             <div class="header-right">
+                <select id="speed-select" class="speed-select" title="Animation Speed">
+                    <option value="0">Instant</option>
+                    <option value="10">Fast</option>
+                    <option value="50" selected>Medium</option>
+                    <option value="150">Slow</option>
+                    <option value="500">Very Slow</option>
+                </select>
                 <button id="btn-run" class="btn btn-primary" title="Run (Ctrl+Enter)">
                     <span class="icon">▶</span> Run
                 </button>
-                <button id="btn-stop" class="btn btn-danger" title="Stop" disabled>
+                <button id="btn-step" class="btn btn-warning" title="Step (F10)">
+                    <span class="icon">→</span> Step
+                </button>
+                <button id="btn-stop" class="btn btn-danger" title="Stop (Escape)" disabled>
                     <span class="icon">■</span> Stop
                 </button>
                 <button id="btn-clear" class="btn" title="Clear Canvas">
                     <span class="icon">🗑</span> Clear
                 </button>
-                <button id="btn-help" class="btn" title="Help">
+                <button id="btn-share" class="btn" title="Share Code">
+                    <span class="icon">🔗</span> Share
+                </button>
+                <button id="btn-learn" class="btn btn-learn" title="Interactive Tutorials">
+                    <span class="icon">📚</span> Learn
+                </button>
+                <button id="btn-help" class="btn" title="Help (F1)">
                     <span class="icon">?</span> Help
+                </button>
+                <button id="btn-theme" class="btn btn-icon" title="Toggle Theme">
+                    <span class="icon" id="theme-icon">🌙</span>
                 </button>
             </div>
         </header>
@@ -43,9 +62,20 @@
                 </div>
                 <div id="editor-container">
                     <div id="line-numbers"></div>
-                    <textarea id="code-editor" spellcheck="false" placeholder="Type your Logo code here...
+                    <div id="editor-wrapper">
+                        <pre id="syntax-highlight" aria-hidden="true"></pre>
+                        <textarea id="code-editor" spellcheck="false" placeholder="Type your Logo code here...
 
 Try: REPEAT 4 [FD 100 RT 90]"></textarea>
+                    </div>
+                </div>
+                <!-- Variables Panel (collapsible) -->
+                <div id="variables-panel" class="variables-panel collapsed">
+                    <div class="panel-header" id="variables-header">
+                        <span>Variables</span>
+                        <button class="btn-small" id="btn-toggle-vars">▼</button>
+                    </div>
+                    <div id="variables-content"></div>
                 </div>
             </div>
 
@@ -55,6 +85,7 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                     <span>Canvas</span>
                     <div class="panel-actions">
                         <span id="coordinates" class="coordinates">X: 0, Y: 0</span>
+                        <button id="btn-download" class="btn-small" title="Download Image">📷</button>
                         <button id="btn-zoom-in" class="btn-small" title="Zoom In">+</button>
                         <button id="btn-zoom-out" class="btn-small" title="Zoom Out">-</button>
                         <button id="btn-reset-view" class="btn-small" title="Reset View">⌂</button>
@@ -311,12 +342,73 @@ PRINT DOUBLE 5  ; prints 10</pre>
                 </div>
             </div>
         </div>
+
+        <!-- Tutorials Modal -->
+        <div id="tutorials-modal" class="modal hidden">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2>Learn Logo Programming</h2>
+                    <button id="btn-close-tutorials" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body tutorials-body">
+                    <div class="tutorials-sidebar">
+                        <div class="tutorial-item active" data-lesson="1">
+                            <span class="lesson-num">1</span>
+                            <span>Moving the Turtle</span>
+                        </div>
+                        <div class="tutorial-item" data-lesson="2">
+                            <span class="lesson-num">2</span>
+                            <span>Drawing Shapes</span>
+                        </div>
+                        <div class="tutorial-item" data-lesson="3">
+                            <span class="lesson-num">3</span>
+                            <span>Colors & Pen</span>
+                        </div>
+                        <div class="tutorial-item" data-lesson="4">
+                            <span class="lesson-num">4</span>
+                            <span>Loops with REPEAT</span>
+                        </div>
+                        <div class="tutorial-item" data-lesson="5">
+                            <span class="lesson-num">5</span>
+                            <span>Creating Procedures</span>
+                        </div>
+                        <div class="tutorial-item" data-lesson="6">
+                            <span class="lesson-num">6</span>
+                            <span>Variables</span>
+                        </div>
+                    </div>
+                    <div class="tutorials-content" id="tutorial-content">
+                        <!-- Content loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Share Modal -->
+        <div id="share-modal" class="modal hidden">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2>Share Your Code</h2>
+                    <button id="btn-close-share" class="btn-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>Share this link with others:</p>
+                    <div class="share-url-container">
+                        <input type="text" id="share-url" readonly>
+                        <button id="btn-copy-url" class="btn btn-primary">Copy</button>
+                    </div>
+                    <p class="share-note">Anyone with this link can view and edit your code.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
+    <script src="js/lzstring.min.js"></script>
     <script src="js/interpreter.js"></script>
     <script src="js/turtle.js"></script>
     <script src="js/editor.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/tutorials.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>

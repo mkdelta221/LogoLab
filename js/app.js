@@ -154,6 +154,7 @@ class LogoLabApp {
 
         // Buttons
         this.btnRun = document.getElementById('btn-run');
+        this.btnStep = document.getElementById('btn-step');
         this.btnStop = document.getElementById('btn-stop');
         this.btnClear = document.getElementById('btn-clear');
         this.btnHelp = document.getElementById('btn-help');
@@ -165,23 +166,45 @@ class LogoLabApp {
         this.btnZoomIn = document.getElementById('btn-zoom-in');
         this.btnZoomOut = document.getElementById('btn-zoom-out');
         this.btnResetView = document.getElementById('btn-reset-view');
+        this.btnDownload = document.getElementById('btn-download');
+        this.btnShare = document.getElementById('btn-share');
+        this.btnLearn = document.getElementById('btn-learn');
+        this.btnTheme = document.getElementById('btn-theme');
+        this.btnToggleVars = document.getElementById('btn-toggle-vars');
         this.fileInput = document.getElementById('file-input');
+
+        // Speed selector
+        this.speedSelect = document.getElementById('speed-select');
 
         // Modals
         this.helpModal = document.getElementById('help-modal');
         this.examplesModal = document.getElementById('examples-modal');
+        this.tutorialsModal = document.getElementById('tutorials-modal');
+        this.shareModal = document.getElementById('share-modal');
+
+        // Theme
+        this.themeIcon = document.getElementById('theme-icon');
+        this.currentTheme = localStorage.getItem('logolab-theme') || 'dark';
+
+        // Variables panel
+        this.variablesPanel = document.getElementById('variables-panel');
+        this.variablesContent = document.getElementById('variables-content');
 
         // Initialize components
         this.turtle = new TurtleGraphics(this.canvas);
         this.interpreter = new LogoInterpreter(this.turtle);
         this.editor = new LogoEditor(this.codeEditor, this.lineNumbers);
         this.storage = new StorageManager();
+        this.tutorialManager = new TutorialManager();
 
         // Set up event handlers
         this.setupEventHandlers();
 
-        // Load auto-saved code
-        this.loadAutoSave();
+        // Apply theme
+        this.applyTheme();
+
+        // Load code from URL or auto-save
+        this.loadInitialCode();
 
         // Handle window resize
         window.addEventListener('resize', () => this.turtle.resize());
@@ -191,13 +214,21 @@ class LogoLabApp {
         // Run button
         this.btnRun.addEventListener('click', () => this.run());
 
+        // Step button
+        if (this.btnStep) {
+            this.btnStep.addEventListener('click', () => this.step());
+        }
+
         // Stop button
         this.btnStop.addEventListener('click', () => this.stop());
 
-        // Clear canvas button
+        // Clear button - clears canvas, code, and resets everything
         this.btnClear.addEventListener('click', () => {
+            this.editor.clear();
             this.turtle.clearScreen();
             this.interpreter.reset();
+            this.clearOutput();
+            this.updateVariablesPanel();
         });
 
         // Help button
@@ -237,6 +268,40 @@ class LogoLabApp {
         this.btnZoomOut.addEventListener('click', () => this.turtle.zoomOut());
         this.btnResetView.addEventListener('click', () => this.turtle.resetView());
 
+        // Download image button
+        if (this.btnDownload) {
+            this.btnDownload.addEventListener('click', () => this.downloadImage());
+        }
+
+        // Share button
+        if (this.btnShare) {
+            this.btnShare.addEventListener('click', () => this.showShareModal());
+        }
+
+        // Learn/Tutorials button
+        if (this.btnLearn) {
+            this.btnLearn.addEventListener('click', () => this.showTutorials());
+        }
+
+        // Theme toggle button
+        if (this.btnTheme) {
+            this.btnTheme.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Variables panel toggle
+        if (this.btnToggleVars) {
+            this.btnToggleVars.addEventListener('click', () => this.toggleVariablesPanel());
+        }
+
+        // Speed selector
+        if (this.speedSelect) {
+            this.speedSelect.addEventListener('change', () => {
+                this.interpreter.executionSpeed = parseInt(this.speedSelect.value);
+            });
+            // Set initial speed
+            this.interpreter.executionSpeed = parseInt(this.speedSelect.value);
+        }
+
         // Help tabs
         document.querySelectorAll('.help-tab').forEach(tab => {
             tab.addEventListener('click', () => {
@@ -247,6 +312,27 @@ class LogoLabApp {
             });
         });
 
+        // Tutorials modal
+        if (this.tutorialsModal) {
+            document.getElementById('btn-close-tutorials')?.addEventListener('click', () => this.hideTutorials());
+
+            // Tutorial lesson items
+            document.querySelectorAll('.tutorial-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const lesson = parseInt(item.dataset.lesson);
+                    this.loadTutorialLesson(lesson);
+                    document.querySelectorAll('.tutorial-item').forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
+                });
+            });
+        }
+
+        // Share modal
+        if (this.shareModal) {
+            document.getElementById('btn-close-share')?.addEventListener('click', () => this.hideShareModal());
+            document.getElementById('btn-copy-url')?.addEventListener('click', () => this.copyShareUrl());
+        }
+
         // Close modals on backdrop click
         this.helpModal.addEventListener('click', (e) => {
             if (e.target === this.helpModal) this.hideHelp();
@@ -254,6 +340,16 @@ class LogoLabApp {
         this.examplesModal.addEventListener('click', (e) => {
             if (e.target === this.examplesModal) this.hideExamples();
         });
+        if (this.tutorialsModal) {
+            this.tutorialsModal.addEventListener('click', (e) => {
+                if (e.target === this.tutorialsModal) this.hideTutorials();
+            });
+        }
+        if (this.shareModal) {
+            this.shareModal.addEventListener('click', (e) => {
+                if (e.target === this.shareModal) this.hideShareModal();
+            });
+        }
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
@@ -262,12 +358,31 @@ class LogoLabApp {
                 e.preventDefault();
                 this.run();
             }
+            // Ctrl+S to save
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                this.saveProject();
+            }
+            // F10 to step
+            if (e.key === 'F10') {
+                e.preventDefault();
+                this.step();
+            }
+            // F1 for help
+            if (e.key === 'F1') {
+                e.preventDefault();
+                this.showHelp();
+            }
             // Escape to stop or close modals
             if (e.key === 'Escape') {
                 if (!this.helpModal.classList.contains('hidden')) {
                     this.hideHelp();
                 } else if (!this.examplesModal.classList.contains('hidden')) {
                     this.hideExamples();
+                } else if (this.tutorialsModal && !this.tutorialsModal.classList.contains('hidden')) {
+                    this.hideTutorials();
+                } else if (this.shareModal && !this.shareModal.classList.contains('hidden')) {
+                    this.hideShareModal();
                 } else {
                     this.stop();
                 }
@@ -302,6 +417,21 @@ class LogoLabApp {
         };
     }
 
+    loadInitialCode() {
+        // Check URL for shared code first
+        const urlCode = this.loadFromUrl();
+        if (urlCode) {
+            this.editor.setValue(urlCode);
+            this.appendOutput('Loaded shared code from URL\n', false, 'info');
+            // Clear the URL hash to avoid confusion
+            history.replaceState(null, '', window.location.pathname);
+            return;
+        }
+
+        // Otherwise load auto-saved code
+        this.loadAutoSave();
+    }
+
     async run() {
         const code = this.editor.getValue();
         if (!code.trim()) {
@@ -324,7 +454,19 @@ class LogoLabApp {
         } finally {
             this.btnRun.disabled = false;
             this.btnStop.disabled = true;
+            this.updateVariablesPanel();
         }
+    }
+
+    async step() {
+        // Step-through debugging - simplified version
+        // For full step-through, would need to modify interpreter more extensively
+        this.appendOutput('Step mode: Running one command...\n', false, 'info');
+        // For now, just run with slow speed
+        const oldSpeed = this.interpreter.executionSpeed;
+        this.interpreter.executionSpeed = 500;
+        await this.run();
+        this.interpreter.executionSpeed = oldSpeed;
     }
 
     stop() {
@@ -364,6 +506,161 @@ class LogoLabApp {
         this.examplesModal.classList.add('hidden');
     }
 
+    showTutorials() {
+        if (this.tutorialsModal) {
+            this.tutorialsModal.classList.remove('hidden');
+            this.loadTutorialLesson(1);
+        }
+    }
+
+    hideTutorials() {
+        if (this.tutorialsModal) {
+            this.tutorialsModal.classList.add('hidden');
+        }
+    }
+
+    loadTutorialLesson(lessonNum) {
+        const content = document.getElementById('tutorial-content');
+        if (content && this.tutorialManager) {
+            content.innerHTML = this.tutorialManager.getLessonContent(lessonNum);
+
+            // Add click handlers for "Try It" buttons
+            content.querySelectorAll('.try-code').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const code = btn.dataset.code.replace(/\\n/g, '\n');
+                    this.editor.setValue(code);
+                    this.hideTutorials();
+                });
+            });
+        }
+    }
+
+    showShareModal() {
+        if (this.shareModal) {
+            const code = this.editor.getValue();
+            const shareUrl = this.generateShareUrl(code);
+            document.getElementById('share-url').value = shareUrl;
+            this.shareModal.classList.remove('hidden');
+        }
+    }
+
+    hideShareModal() {
+        if (this.shareModal) {
+            this.shareModal.classList.add('hidden');
+        }
+    }
+
+    generateShareUrl(code) {
+        if (typeof LZString !== 'undefined') {
+            const compressed = LZString.compressToEncodedURIComponent(code);
+            return `${window.location.origin}${window.location.pathname}#code=${compressed}`;
+        }
+        // Fallback to base64 if LZString not available
+        const encoded = btoa(encodeURIComponent(code));
+        return `${window.location.origin}${window.location.pathname}#code64=${encoded}`;
+    }
+
+    loadFromUrl() {
+        const hash = window.location.hash;
+        if (!hash) return null;
+
+        if (hash.startsWith('#code=')) {
+            const compressed = hash.substring(6);
+            if (typeof LZString !== 'undefined') {
+                return LZString.decompressFromEncodedURIComponent(compressed);
+            }
+        } else if (hash.startsWith('#code64=')) {
+            const encoded = hash.substring(8);
+            try {
+                return decodeURIComponent(atob(encoded));
+            } catch (e) {
+                console.warn('Failed to decode URL code:', e);
+            }
+        }
+        return null;
+    }
+
+    copyShareUrl() {
+        const urlInput = document.getElementById('share-url');
+        urlInput.select();
+        document.execCommand('copy');
+
+        // Show feedback
+        const btn = document.getElementById('btn-copy-url');
+        const originalText = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 2000);
+    }
+
+    downloadImage() {
+        this.turtle.downloadImage('logolab-drawing');
+        this.appendOutput('Image downloaded!\n', false, 'info');
+    }
+
+    toggleTheme() {
+        this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('logolab-theme', this.currentTheme);
+        this.applyTheme();
+    }
+
+    applyTheme() {
+        document.body.classList.remove('light-theme', 'dark-theme');
+        document.body.classList.add(`${this.currentTheme}-theme`);
+
+        if (this.themeIcon) {
+            this.themeIcon.textContent = this.currentTheme === 'dark' ? '☀️' : '🌙';
+        }
+    }
+
+    toggleVariablesPanel() {
+        if (this.variablesPanel) {
+            this.variablesPanel.classList.toggle('collapsed');
+            const btn = this.btnToggleVars;
+            if (btn) {
+                btn.textContent = this.variablesPanel.classList.contains('collapsed') ? '▼' : '▲';
+            }
+        }
+    }
+
+    updateVariablesPanel() {
+        if (!this.variablesContent) return;
+
+        const vars = this.interpreter.globalVariables;
+        const procs = this.interpreter.procedures;
+
+        let html = '';
+
+        // Show variables
+        const varNames = Object.keys(vars);
+        if (varNames.length > 0) {
+            html += '<div class="var-section"><strong>Variables:</strong></div>';
+            for (const name of varNames) {
+                const value = vars[name];
+                const displayValue = Array.isArray(value) ? `[${value.join(' ')}]` : value;
+                html += `<div class="var-item"><span class="var-name">:${name}</span> = <span class="var-value">${displayValue}</span></div>`;
+            }
+        }
+
+        // Show procedures
+        const procNames = Object.keys(procs);
+        if (procNames.length > 0) {
+            html += '<div class="var-section"><strong>Procedures:</strong></div>';
+            for (const name of procNames) {
+                const proc = procs[name];
+                const params = proc.params.map(p => ':' + p).join(' ');
+                html += `<div class="var-item"><span class="var-name">TO ${name}</span> ${params}</div>`;
+            }
+        }
+
+        if (html === '') {
+            html = '<div class="var-empty">No variables or procedures defined yet.</div>';
+        }
+
+        this.variablesContent.innerHTML = html;
+    }
+
     newProject() {
         if (this.editor.getValue().trim() && !confirm('Clear current code and start a new project?')) {
             return;
@@ -373,6 +670,7 @@ class LogoLabApp {
         this.interpreter.reset();
         this.clearOutput();
         this.storage.clearAutoSave();
+        this.updateVariablesPanel();
     }
 
     saveProject() {
@@ -401,6 +699,7 @@ class LogoLabApp {
             this.interpreter.reset();
             this.clearOutput();
             this.appendOutput(`Loaded: ${project.name}\n`, false, 'info');
+            this.updateVariablesPanel();
         } catch (e) {
             this.appendOutput('Error loading file: ' + e.message + '\n', true);
         }

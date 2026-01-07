@@ -188,6 +188,7 @@ body {
     user-select: none;
     min-width: 40px;
     overflow: hidden;
+    white-space: pre;
 }
 
 #code-editor {
@@ -539,5 +540,399 @@ body {
     #footer {
         flex-direction: column;
         gap: 10px;
+    }
+}
+
+/* ==================== NEW FEATURES ==================== */
+
+/* Light Theme */
+body.light-theme {
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e8e8e8;
+    --text-primary: #2d2d2d;
+    --text-secondary: #666666;
+    --border-color: #d0d0d0;
+    --canvas-bg: #ffffff;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-theme #code-editor {
+    background: #fafafa;
+}
+
+body.light-theme #output-console {
+    background: #f0f0f0;
+}
+
+body.light-theme .btn-primary {
+    color: #ffffff;
+}
+
+/* Speed Select */
+.speed-select {
+    padding: 8px 12px;
+    border: none;
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.speed-select:hover {
+    background: var(--border-color);
+}
+
+/* Warning Button (Step) */
+.btn-warning {
+    background: var(--accent-warning);
+    color: #1e1e2e;
+}
+
+.btn-warning:hover {
+    background: #e6c235;
+}
+
+/* Learn Button */
+.btn-learn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.btn-learn:hover {
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+}
+
+/* Icon-only Button */
+.btn-icon {
+    padding: 8px 10px;
+}
+
+/* Editor Wrapper for Syntax Highlighting */
+#editor-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Syntax highlighting disabled - caused rendering issues */
+#syntax-highlight {
+    display: none;
+}
+
+#editor-wrapper #code-editor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: 100%;
+    padding: 12px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    caret-color: var(--text-primary);
+    border: none;
+    font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    tab-size: 2;
+}
+
+/* Syntax Highlighting Colors */
+.token-keyword { color: #569cd6; }
+.token-number { color: #ce9178; }
+.token-comment { color: #6a9955; font-style: italic; }
+.token-variable { color: #c586c0; }
+.token-string { color: #ce9178; }
+.token-bracket { color: #ffd700; }
+.token-operator { color: #d4d4d4; }
+.token-procedure { color: #dcdcaa; }
+
+body.light-theme .token-keyword { color: #0000ff; }
+body.light-theme .token-number { color: #098658; }
+body.light-theme .token-comment { color: #008000; }
+body.light-theme .token-variable { color: #af00db; }
+body.light-theme .token-string { color: #a31515; }
+body.light-theme .token-bracket { color: #0431fa; }
+body.light-theme .token-procedure { color: #795e26; }
+
+/* Line Highlighting for Debugger */
+.line-highlight {
+    background: rgba(78, 205, 196, 0.2);
+    display: block;
+}
+
+/* Variables Panel */
+.variables-panel {
+    border-top: 1px solid var(--border-color);
+    max-height: 150px;
+    transition: max-height 0.3s ease;
+}
+
+.variables-panel.collapsed {
+    max-height: 32px;
+    overflow: hidden;
+}
+
+.variables-panel .panel-header {
+    cursor: pointer;
+}
+
+#variables-content {
+    padding: 8px 12px;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 12px;
+    overflow-y: auto;
+    max-height: 118px;
+}
+
+.var-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.var-name {
+    color: var(--accent-primary);
+}
+
+.var-value {
+    color: var(--text-secondary);
+}
+
+/* Tutorials Modal */
+.modal-large {
+    max-width: 900px;
+    height: 80vh;
+}
+
+.tutorials-body {
+    display: flex;
+    gap: 20px;
+    height: 100%;
+    padding: 0;
+}
+
+.tutorials-sidebar {
+    width: 200px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    padding: 10px;
+    overflow-y: auto;
+}
+
+.tutorial-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+}
+
+.tutorial-item:hover {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+}
+
+.tutorial-item.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.lesson-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.tutorial-item.active .lesson-num {
+    background: rgba(255,255,255,0.3);
+}
+
+.tutorials-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.tutorials-content h3 {
+    color: var(--accent-primary);
+    margin-bottom: 15px;
+}
+
+.tutorials-content p {
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.tutorials-content pre {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: var(--radius);
+    margin: 15px 0;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 14px;
+    overflow-x: auto;
+}
+
+.tutorials-content .try-it {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    margin-top: 10px;
+}
+
+.tutorials-content .try-it:hover {
+    background: var(--accent-secondary);
+}
+
+.tutorial-tip {
+    background: rgba(78, 205, 196, 0.1);
+    border-left: 3px solid var(--accent-primary);
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.tutorial-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+}
+
+.tutorial-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+}
+
+.tutorial-table td:first-child {
+    width: 40%;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.9rem;
+}
+
+.tutorial-table code {
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.tutorial-code {
+    background: var(--bg-tertiary);
+    padding: 15px;
+    border-radius: var(--radius);
+    margin: 15px 0;
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 14px;
+    white-space: pre-wrap;
+}
+
+.try-code {
+    display: inline-block;
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 500;
+    margin: 10px 0;
+    transition: all 0.2s ease;
+}
+
+.try-code:hover {
+    background: var(--accent-secondary);
+}
+
+.tutorials-content h4 {
+    color: var(--text-primary);
+    margin: 20px 0 10px;
+}
+
+.tutorials-content ul {
+    margin: 10px 0 15px 20px;
+    line-height: 1.8;
+}
+
+.var-section {
+    padding: 4px 0;
+    color: var(--text-secondary);
+}
+
+.var-empty {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Share Modal */
+.modal-small {
+    max-width: 500px;
+}
+
+.share-url-container {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.share-url-container input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.85rem;
+}
+
+.share-note {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Current Line Indicator */
+.current-line {
+    background: rgba(255, 217, 61, 0.15) !important;
+}
+
+/* Mobile Improvements */
+@media (max-width: 600px) {
+    .speed-select {
+        width: 80px;
+    }
+
+    .btn-learn span:last-child,
+    .btn-share span:last-child {
+        display: none;
+    }
+
+    .tutorials-sidebar {
+        width: 60px;
+    }
+
+    .tutorial-item span:last-child {
+        display: none;
     }
 }

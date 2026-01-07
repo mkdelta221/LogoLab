@@ -432,6 +432,43 @@ class TurtleGraphics {
             y: Math.round(this.toLogoY(canvasY))
         };
     }
+
+    // Export canvas as image
+    exportImage(hideTurtle = true) {
+        // Temporarily hide turtles if requested
+        const turtleVisibility = {};
+        if (hideTurtle) {
+            for (const id in this.turtles) {
+                turtleVisibility[id] = this.turtles[id].visible;
+                this.turtles[id].visible = false;
+            }
+            this.redraw();
+        }
+
+        // Get canvas data
+        const dataURL = this.canvas.toDataURL('image/png');
+
+        // Restore turtle visibility
+        if (hideTurtle) {
+            for (const id in this.turtles) {
+                this.turtles[id].visible = turtleVisibility[id];
+            }
+            this.redraw();
+        }
+
+        return dataURL;
+    }
+
+    // Download canvas as image file
+    downloadImage(filename = 'logolab-drawing') {
+        const dataURL = this.exportImage(true);
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = `${filename}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
 }
 
 // Export for use in other modules
