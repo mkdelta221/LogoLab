@@ -187,7 +187,8 @@ class TurtleGraphics {
             let x = oldX, y = oldY;
             const dx = newX - oldX;
             const dy = newY - oldY;
-            const steps = Math.max(Math.abs(dx), Math.abs(dy)) / 10;
+            // Ensure at least 1 step so small movements still draw
+            const steps = Math.max(1, Math.ceil(Math.max(Math.abs(dx), Math.abs(dy)) / 10));
 
             for (let i = 1; i <= steps; i++) {
                 const nextX = oldX + (dx * i / steps);
