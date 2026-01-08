@@ -416,6 +416,26 @@ class LogoLabApp {
             this.coordinates.textContent = `X: ${coords.x}, Y: ${coords.y}`;
         });
 
+        // Touch support for mobile devices
+        this.canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = this.canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            const coords = this.turtle.getCoordinates(x, y);
+            this.coordinates.textContent = `X: ${coords.x}, Y: ${coords.y}`;
+        }, { passive: false });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            const rect = this.canvas.getBoundingClientRect();
+            const x = touch.clientX - rect.left;
+            const y = touch.clientY - rect.top;
+            const coords = this.turtle.getCoordinates(x, y);
+            this.coordinates.textContent = `X: ${coords.x}, Y: ${coords.y}`;
+        }, { passive: true });
+
         // Auto-save on code change
         this.editor.onChange = (code) => {
             this.storage.autoSave(code);

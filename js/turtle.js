@@ -77,7 +77,7 @@ class TurtleGraphics {
     // Canvas methods
     resize() {
         const container = this.canvas.parentElement;
-        const padding = 20;
+        const padding = 10;
         const maxWidth = container.clientWidth - padding;
         const maxHeight = container.clientHeight - padding;
 
@@ -90,9 +90,11 @@ class TurtleGraphics {
             width = height / 0.75;
         }
 
-        // Minimum size
-        width = Math.max(400, Math.min(800, width));
-        height = Math.max(300, Math.min(600, height));
+        // Responsive minimum size based on container
+        // Allow smaller canvas on small phones (min 280px)
+        const minWidth = Math.min(280, maxWidth);
+        width = Math.max(minWidth, Math.min(800, width));
+        height = Math.max(minWidth * 0.75, Math.min(600, height));
 
         this.canvas.width = width;
         this.canvas.height = height;

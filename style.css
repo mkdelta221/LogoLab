@@ -518,28 +518,200 @@ body {
 
     #editor-panel, #canvas-panel {
         min-width: unset;
-        min-height: 200px;
+        min-height: 150px;
+        flex: 1;
     }
 
     .tagline {
         display: none;
+    }
+
+    #output-panel {
+        height: 80px;
+        min-height: 60px;
+    }
+}
+
+/* Landscape orientation on tablets keeps side-by-side */
+@media (max-width: 900px) and (orientation: landscape) {
+    #main {
+        flex-direction: row;
+    }
+
+    #editor-panel, #canvas-panel {
+        min-height: unset;
+        flex: 1;
     }
 }
 
 @media (max-width: 600px) {
     #header {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        padding: 8px 12px;
     }
 
     .header-right {
         flex-wrap: wrap;
         justify-content: center;
+        gap: 4px;
+    }
+
+    /* Hide button text, show only icons */
+    .header-right .btn span:not(.icon) {
+        display: none;
+    }
+
+    .btn {
+        padding: 8px 10px;
+        min-width: auto;
+    }
+
+    .speed-select {
+        width: 70px;
+        font-size: 12px;
+        padding: 6px 8px;
     }
 
     #footer {
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .footer-left, .footer-center, .footer-right {
+        justify-content: center;
+        width: 100%;
+    }
+
+    /* Modal improvements */
+    .modal-content {
+        width: 95%;
+        max-height: 90vh;
+        margin: 5vh auto;
+    }
+
+    .modal-body {
+        max-height: 70vh;
+        overflow-y: auto;
+        padding: 15px;
+    }
+
+    /* Help modal scrollable tables */
+    .help-content table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .help-tabs {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .help-tab {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    /* Tutorials modal horizontal sidebar */
+    .tutorials-body {
+        flex-direction: column;
+    }
+
+    .tutorials-sidebar {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        gap: 8px;
+        padding: 10px;
+        flex-shrink: 0;
+    }
+
+    .tutorial-item {
+        flex-shrink: 0;
+        padding: 8px 12px;
+    }
+
+    .tutorials-content {
+        padding: 15px;
+    }
+
+    /* Canvas panel adjustments */
+    #canvas-panel {
+        min-width: unset;
+    }
+
+    #canvas-container {
+        padding: 5px;
+    }
+
+    /* Coordinates display smaller */
+    .coordinates {
+        font-size: 0.7rem;
+        padding: 2px 6px;
+    }
+}
+
+/* Portrait mode on phones - give more space to canvas */
+@media (max-width: 600px) and (orientation: portrait) {
+    #editor-panel {
+        flex: 1;
+        min-height: 120px;
+    }
+
+    #canvas-panel {
+        flex: 1.5;
+    }
+}
+
+/* Very small phones (iPhone SE, etc.) */
+@media (max-width: 480px) {
+    #header {
+        padding: 6px 10px;
+    }
+
+    .header-left h1 {
+        font-size: 1.2rem;
+    }
+
+    .header-right {
+        gap: 3px;
+    }
+
+    .btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    .speed-select {
+        width: 60px;
+        font-size: 11px;
+    }
+
+    /* Hide coordinates on very small screens */
+    .coordinates {
+        display: none;
+    }
+
+    #footer {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    .donate-link {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+
+    /* Panel headers smaller */
+    .panel-header {
+        padding: 6px 10px;
+        font-size: 0.75rem;
+    }
+
+    /* Examples grid single column */
+    .examples-list {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -917,22 +1089,26 @@ body.light-theme .token-procedure { color: #795e26; }
     background: rgba(255, 217, 61, 0.15) !important;
 }
 
-/* Mobile Improvements */
-@media (max-width: 600px) {
-    .speed-select {
-        width: 80px;
+/* Mobile touch improvements */
+@media (hover: none) and (pointer: coarse) {
+    /* Larger touch targets for mobile */
+    .btn {
+        min-height: 44px;
+        min-width: 44px;
     }
 
-    .btn-learn span:last-child,
-    .btn-share span:last-child {
-        display: none;
+    .help-tab, .tutorial-item, .example-item {
+        min-height: 44px;
     }
 
-    .tutorials-sidebar {
-        width: 60px;
+    /* Better scrolling on touch devices */
+    .modal-body, .tutorials-content, #output-console {
+        -webkit-overflow-scrolling: touch;
     }
 
-    .tutorial-item span:last-child {
-        display: none;
+    /* Prevent text selection on buttons */
+    .btn, .help-tab, .tutorial-item {
+        -webkit-user-select: none;
+        user-select: none;
     }
 }
