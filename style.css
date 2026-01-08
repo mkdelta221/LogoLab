@@ -491,6 +491,32 @@ body {
     font-size: 0.85rem;
 }
 
+/* Difficulty Badges */
+.difficulty-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.difficulty-badge.beginner {
+    background: #22c55e;
+    color: #fff;
+}
+
+.difficulty-badge.intermediate {
+    background: #f59e0b;
+    color: #fff;
+}
+
+.difficulty-badge.advanced {
+    background: #ef4444;
+    color: #fff;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;
@@ -937,6 +963,53 @@ body.light-theme .token-procedure { color: #795e26; }
     background: rgba(255,255,255,0.3);
 }
 
+/* Tutorial progress bar */
+.tutorial-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.tutorial-progress #progress-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.progress-bar {
+    width: 120px;
+    height: 8px;
+    background: var(--bg-tertiary);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Completed lesson checkmark */
+.tutorial-item.completed .lesson-num::after {
+    content: '✓';
+    position: absolute;
+    font-size: 0.6rem;
+}
+
+.tutorial-item.completed .lesson-num {
+    position: relative;
+    background: #22c55e;
+    color: white;
+}
+
+.tutorial-item.completed:not(.active) {
+    color: var(--text-primary);
+}
+
 .tutorials-content {
     flex: 1;
     padding: 20px;
@@ -1035,6 +1108,91 @@ body.light-theme .token-procedure { color: #795e26; }
 
 .try-code:hover {
     background: var(--accent-secondary);
+}
+
+/* Challenge hints and solutions */
+.challenge-help {
+    margin: 15px 0;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--accent-primary);
+}
+
+.btn-hint, .btn-solution {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 0.85rem;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-hint:hover {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.btn-solution:hover {
+    background: #22c55e;
+    color: white;
+    border-color: #22c55e;
+}
+
+.hint-box, .solution-box {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: var(--radius);
+}
+
+.hint-box {
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.solution-box {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.hint-box.hidden, .solution-box.hidden {
+    display: none;
+}
+
+/* Mark Complete button */
+.mark-complete-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.btn-success {
+    background: #22c55e;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.btn-success:hover {
+    background: #16a34a;
+    transform: scale(1.02);
+}
+
+.completed-badge {
+    color: #22c55e;
+    font-weight: 600;
+    font-size: 1.1rem;
 }
 
 .tutorials-content h4 {

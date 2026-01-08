@@ -28,6 +28,19 @@ FD 50</pre>
 
             <h4>Challenge</h4>
             <p>Can you make the turtle draw an "L" shape?</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> An "L" has two lines - one going up, then turn right, and one going across.</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">FD 100
+RT 90
+FD 50</pre>
+                    <button class="btn btn-primary try-code" data-code="FD 100\nRT 90\nFD 50">Load Solution</button>
+                </div>
+            </div>
         `
     },
     2: {
@@ -67,6 +80,28 @@ RT 120</pre>
 
             <h4>Challenge</h4>
             <p>Can you draw a hexagon (6 sides)? Hint: 360 / 6 = 60</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> A hexagon has 6 sides. Use the formula: turn angle = 360 / 6 = 60 degrees.</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">FD 50
+RT 60
+FD 50
+RT 60
+FD 50
+RT 60
+FD 50
+RT 60
+FD 50
+RT 60
+FD 50
+RT 60</pre>
+                    <button class="btn btn-primary try-code" data-code="FD 50\nRT 60\nFD 50\nRT 60\nFD 50\nRT 60\nFD 50\nRT 60\nFD 50\nRT 60\nFD 50\nRT 60">Load Solution</button>
+                </div>
+            </div>
         `
     },
     3: {
@@ -93,7 +128,7 @@ FD 100
 RT 90
 SETPC "blue
 FD 100</pre>
-            <button class="btn btn-primary try-code" data-code='SETPC "red\nSETPENSIZE 3\nFD 100\nRT 90\nSETPIC "blue\nFD 100'>Load this code</button>
+            <button class="btn btn-primary try-code" data-code='SETPC "red\nSETPENSIZE 3\nFD 100\nRT 90\nSETPC "blue\nFD 100'>Load this code</button>
 
             <h4>Moving Without Drawing</h4>
             <p>Use PENUP to move without drawing, then PENDOWN to start drawing again:</p>
@@ -106,6 +141,30 @@ FD 50</pre>
 
             <h4>Challenge</h4>
             <p>Draw a traffic light: three circles (red, yellow, green) stacked vertically!</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> Use CIRCLE to draw circles. Use PENUP to move without drawing between circles, then PENDOWN to draw again. Use SETPC to change colors!</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">; Red light
+SETPC "red
+PU SETY 60 PD
+FILLED [CIRCLE 25]
+
+; Yellow light
+SETPC "yellow
+PU SETY 0 PD
+FILLED [CIRCLE 25]
+
+; Green light
+SETPC "green
+PU SETY -60 PD
+FILLED [CIRCLE 25]</pre>
+                    <button class="btn btn-primary try-code" data-code='; Red light\nSETPC "red\nPU SETY 60 PD\nFILLED [CIRCLE 25]\n\n; Yellow light\nSETPC "yellow\nPU SETY 0 PD\nFILLED [CIRCLE 25]\n\n; Green light\nSETPC "green\nPU SETY -60 PD\nFILLED [CIRCLE 25]'>Load Solution</button>
+                </div>
+            </div>
         `
     },
     4: {
@@ -147,6 +206,21 @@ REPEAT 5 [FD 100 RT 144]</pre>
 
             <h4>Challenge</h4>
             <p>Make a spiral using REPEAT and increasing distances!</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> Use a FOR loop where the distance increases each time. FOR [i 1 20] gives you numbers 1 to 20!</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">SETPC "purple
+FOR [i 1 50] [
+  FD :i * 3
+  RT 91
+]</pre>
+                    <button class="btn btn-primary try-code" data-code='SETPC "purple\nFOR [i 1 50] [\n  FD :i * 3\n  RT 91\n]'>Load Solution</button>
+                </div>
+            </div>
         `
     },
     5: {
@@ -191,6 +265,28 @@ POLYGON 6 50</pre>
 
             <h4>Challenge</h4>
             <p>Create a STAR procedure that takes a size parameter!</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> A 5-pointed star uses REPEAT 5 and turns 144 degrees (not 72!). Use :size as your parameter.</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">TO STAR :size
+  REPEAT 5 [
+    FD :size
+    RT 144
+  ]
+END
+
+SETPC "gold
+STAR 100
+PU RT 90 FD 150 LT 90 PD
+SETPC "red
+STAR 60</pre>
+                    <button class="btn btn-primary try-code" data-code='TO STAR :size\n  REPEAT 5 [\n    FD :size\n    RT 144\n  ]\nEND\n\nSETPC "gold\nSTAR 100\nPU RT 90 FD 150 LT 90 PD\nSETPC "red\nSTAR 60'>Load Solution</button>
+                </div>
+            </div>
         `
     },
     6: {
@@ -239,6 +335,26 @@ END
 
 SPIRAL 1</pre>
             <button class="btn btn-primary try-code" data-code="TO SPIRAL :size\n  IF :size > 200 [STOP]\n  FD :size\n  RT 91\n  SPIRAL :size + 2\nEND\n\nSPIRAL 1">Load this code</button>
+
+            <h4>Challenge</h4>
+            <p>Create a growing spiral of squares using variables!</p>
+            <div class="challenge-help">
+                <button class="btn btn-hint" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Hint</button>
+                <div class="hint-box hidden">
+                    <p><strong>Hint:</strong> Start with a small size variable, draw a square, then increase the size and rotate a bit. Use REPEAT to do this many times!</p>
+                </div>
+                <button class="btn btn-solution" onclick="this.nextElementSibling.classList.toggle('hidden')">Show Solution</button>
+                <div class="solution-box hidden">
+                    <pre class="tutorial-code">MAKE "size 10
+SETPC "blue
+REPEAT 20 [
+  REPEAT 4 [FD :size RT 90]
+  MAKE "size :size + 5
+  RT 18
+]</pre>
+                    <button class="btn btn-primary try-code" data-code='MAKE "size 10\nSETPC "blue\nREPEAT 20 [\n  REPEAT 4 [FD :size RT 90]\n  MAKE "size :size + 5\n  RT 18\n]'>Load Solution</button>
+                </div>
+            </div>
 
             <h4>Congratulations!</h4>
             <p>You've learned the basics of Logo programming! Keep experimenting and creating amazing art!</p>

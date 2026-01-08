@@ -26,8 +26,8 @@
                 <button id="btn-run" class="btn btn-primary" title="Run (Ctrl+Enter)">
                     <span class="icon">▶</span> Run
                 </button>
-                <button id="btn-step" class="btn btn-warning" title="Step (F10)">
-                    <span class="icon">→</span> Step
+                <button id="btn-step" class="btn btn-warning" title="Run Slowly (F10)">
+                    <span class="icon">→</span> Slow
                 </button>
                 <button id="btn-stop" class="btn btn-danger" title="Stop (Escape)" disabled>
                     <span class="icon">■</span> Stop
@@ -46,6 +46,9 @@
                 </button>
                 <button id="btn-theme" class="btn btn-icon" title="Toggle Theme">
                     <span class="icon" id="theme-icon">🌙</span>
+                </button>
+                <button id="btn-sound" class="btn btn-icon" title="Toggle Sound">
+                    <span class="icon" id="sound-icon">🔊</span>
                 </button>
             </div>
         </header>
@@ -177,6 +180,12 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                             <h4>Colors</h4>
                             <p>Use color names: <code>red</code>, <code>blue</code>, <code>green</code>, <code>yellow</code>, <code>orange</code>, <code>purple</code>, <code>black</code>, <code>white</code>, <code>cyan</code>, <code>magenta</code>, <code>pink</code>, <code>brown</code>, <code>gray</code></p>
                             <p>Or RGB values: <code>[255 0 0]</code> for red</p>
+                            <h4>Shape Commands</h4>
+                            <table>
+                                <tr><td><code>CIRCLE radius</code></td><td>Draw a circle at turtle's position</td></tr>
+                                <tr><td><code>ARC angle radius</code></td><td>Draw an arc and move turtle along it</td></tr>
+                                <tr><td><code>FILLED [...]</code></td><td>Fill the shape drawn inside brackets</td></tr>
+                            </table>
                         </div>
                         <div id="help-control" class="help-section">
                             <h3>Control Structures</h3>
@@ -306,35 +315,58 @@ PRINT DOUBLE 5  ; prints 10</pre>
                 </div>
                 <div class="modal-body">
                     <div class="examples-list">
+                        <div class="example-item" data-example="triangle">
+                            <span class="difficulty-badge beginner">Beginner</span>
+                            <h4>Triangle</h4>
+                            <p>Draw a simple triangle</p>
+                        </div>
                         <div class="example-item" data-example="square">
+                            <span class="difficulty-badge beginner">Beginner</span>
                             <h4>Square</h4>
                             <p>Draw a simple square</p>
                         </div>
+                        <div class="example-item" data-example="house">
+                            <span class="difficulty-badge beginner">Beginner</span>
+                            <h4>House</h4>
+                            <p>Draw a house with a roof</p>
+                        </div>
                         <div class="example-item" data-example="star">
+                            <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Star</h4>
                             <p>Draw a 5-pointed star</p>
                         </div>
-                        <div class="example-item" data-example="spiral">
-                            <h4>Spiral</h4>
-                            <p>Draw a colorful spiral</p>
+                        <div class="example-item" data-example="smiley">
+                            <span class="difficulty-badge intermediate">Intermediate</span>
+                            <h4>Smiley Face</h4>
+                            <p>Draw a smiley using CIRCLE and ARC</p>
                         </div>
                         <div class="example-item" data-example="flower">
+                            <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Flower</h4>
                             <p>Draw a flower pattern</p>
                         </div>
-                        <div class="example-item" data-example="tree">
-                            <h4>Recursive Tree</h4>
-                            <p>Draw a fractal tree</p>
-                        </div>
-                        <div class="example-item" data-example="polygon">
-                            <h4>Polygon Procedure</h4>
-                            <p>Define and use a polygon procedure</p>
-                        </div>
                         <div class="example-item" data-example="rainbow">
+                            <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Rainbow</h4>
                             <p>Draw a colorful rainbow</p>
                         </div>
+                        <div class="example-item" data-example="polygon">
+                            <span class="difficulty-badge intermediate">Intermediate</span>
+                            <h4>Polygon Procedure</h4>
+                            <p>Define and use a polygon procedure</p>
+                        </div>
+                        <div class="example-item" data-example="spiral">
+                            <span class="difficulty-badge advanced">Advanced</span>
+                            <h4>Spiral</h4>
+                            <p>Draw a recursive spiral</p>
+                        </div>
+                        <div class="example-item" data-example="tree">
+                            <span class="difficulty-badge advanced">Advanced</span>
+                            <h4>Recursive Tree</h4>
+                            <p>Draw a fractal tree</p>
+                        </div>
                         <div class="example-item" data-example="sierpinski">
+                            <span class="difficulty-badge advanced">Advanced</span>
                             <h4>Sierpinski Triangle</h4>
                             <p>Draw a fractal triangle</p>
                         </div>
@@ -348,6 +380,12 @@ PRINT DOUBLE 5  ; prints 10</pre>
             <div class="modal-content modal-large">
                 <div class="modal-header">
                     <h2>Learn Logo Programming</h2>
+                    <div class="tutorial-progress">
+                        <span id="progress-text">0/6 complete</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
                     <button id="btn-close-tutorials" class="btn-close">&times;</button>
                 </div>
                 <div class="modal-body tutorials-body">

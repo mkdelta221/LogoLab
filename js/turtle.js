@@ -25,6 +25,13 @@ class TurtleGraphics {
         this.mode = 'wrap'; // wrap, window, fence
         this.commands = []; // History for redraw
 
+        // Fill state
+        this.filling = false;
+        this.fillCommands = [];
+        this.fillStartX = 0;
+        this.fillStartY = 0;
+        this.fillColor = '#000000';
+
         // Animation
         this.animationFrame = null;
 
@@ -256,6 +263,11 @@ class TurtleGraphics {
         };
         this.commands.push(command);
         this.executeCommand(command);
+
+        // Track for filling
+        if (this.filling) {
+            this.fillCommands.push(command);
+        }
     }
 
     executeCommand(cmd) {
@@ -268,6 +280,71 @@ class TurtleGraphics {
             this.ctx.lineCap = 'round';
             this.ctx.lineJoin = 'round';
             this.ctx.stroke();
+        } else if (cmd.type === 'circle') {
+            this.ctx.beginPath();
+            this.ctx.arc(
+                this.toCanvasX(cmd.x),
+                this.toCanvasY(cmd.y),
+                Math.abs(cmd.radius) * this.zoom,
+                0,
+                2 * Math.PI
+            );
+            if (cmd.filled) {
+                this.ctx.fillStyle = cmd.color;
+                this.ctx.fill();
+            }
+            this.ctx.strokeStyle = cmd.mode === 'erase' ? this.backgroundColor : cmd.color;
+            this.ctx.lineWidth = cmd.size * this.zoom;
+            this.ctx.stroke();
+        } else if (cmd.type === 'arc') {
+            this.ctx.beginPath();
+            this.ctx.arc(
+                this.toCanvasX(cmd.centerX),
+                this.toCanvasY(cmd.centerY),
+                cmd.radius * this.zoom,
+                -cmd.startAngle, // Negate because canvas Y is inverted
+                -cmd.endAngle,
+                !cmd.counterclockwise // Invert because canvas Y is inverted
+            );
+            this.ctx.strokeStyle = cmd.mode === 'erase' ? this.backgroundColor : cmd.color;
+            this.ctx.lineWidth = cmd.size * this.zoom;
+            this.ctx.lineCap = 'round';
+            this.ctx.stroke();
+        } else if (cmd.type === 'fill') {
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.toCanvasX(cmd.startX), this.toCanvasY(cmd.startY));
+
+            for (const subCmd of cmd.commands) {
+                if (subCmd.type === 'line') {
+                    this.ctx.lineTo(this.toCanvasX(subCmd.x2), this.toCanvasY(subCmd.y2));
+                } else if (subCmd.type === 'arc') {
+                    this.ctx.arc(
+                        this.toCanvasX(subCmd.centerX),
+                        this.toCanvasY(subCmd.centerY),
+                        subCmd.radius * this.zoom,
+                        -subCmd.startAngle,
+                        -subCmd.endAngle,
+                        !subCmd.counterclockwise
+                    );
+                } else if (subCmd.type === 'circle') {
+                    // For filled circles within a path, draw separately
+                    this.ctx.moveTo(
+                        this.toCanvasX(subCmd.x) + Math.abs(subCmd.radius) * this.zoom,
+                        this.toCanvasY(subCmd.y)
+                    );
+                    this.ctx.arc(
+                        this.toCanvasX(subCmd.x),
+                        this.toCanvasY(subCmd.y),
+                        Math.abs(subCmd.radius) * this.zoom,
+                        0,
+                        2 * Math.PI
+                    );
+                }
+            }
+
+            this.ctx.closePath();
+            this.ctx.fillStyle = cmd.color;
+            this.ctx.fill();
         }
     }
 
@@ -294,6 +371,107 @@ class TurtleGraphics {
 
     penPaint() {
         this.currentTurtle.penMode = 'paint';
+    }
+
+    // Circle and arc drawing
+    circle(radius) {
+        const turtle = this.currentTurtle;
+        const command = {
+            type: 'circle',
+            x: turtle.x,
+            y: turtle.y,
+            radius: radius,
+            color: turtle.penColor,
+            size: turtle.penSize,
+            mode: turtle.penMode,
+            filled: this.filling
+        };
+        this.commands.push(command);
+        this.executeCommand(command);
+
+        // If filling, add to fill path
+        if (this.filling) {
+            this.fillCommands.push(command);
+        }
+        this.draw();
+    }
+
+    arc(angle, radius) {
+        const turtle = this.currentTurtle;
+        // Arc draws from current position, moving the turtle along the arc
+        // Positive angle = counterclockwise (left), negative = clockwise (right)
+        const startAngle = (turtle.heading - 90) * Math.PI / 180;
+        const arcRadians = angle * Math.PI / 180;
+
+        // Calculate arc center (perpendicular to turtle direction)
+        const perpAngle = startAngle + Math.PI / 2; // 90 degrees to the left
+        const centerX = turtle.x + radius * Math.cos(perpAngle);
+        const centerY = turtle.y - radius * Math.sin(perpAngle);
+
+        // Calculate end position
+        const endAngle = startAngle - arcRadians;
+        const newX = centerX - radius * Math.cos(perpAngle - arcRadians);
+        const newY = centerY + radius * Math.sin(perpAngle - arcRadians);
+
+        if (turtle.penDown) {
+            const command = {
+                type: 'arc',
+                centerX: centerX,
+                centerY: centerY,
+                radius: Math.abs(radius),
+                startAngle: startAngle - Math.PI / 2,
+                endAngle: startAngle - Math.PI / 2 - arcRadians,
+                counterclockwise: angle > 0,
+                color: turtle.penColor,
+                size: turtle.penSize,
+                mode: turtle.penMode
+            };
+            this.commands.push(command);
+            this.executeCommand(command);
+
+            if (this.filling) {
+                this.fillCommands.push(command);
+            }
+        }
+
+        // Move turtle to end of arc and update heading
+        turtle.x = newX;
+        turtle.y = newY;
+        turtle.heading = (turtle.heading + angle) % 360;
+        if (turtle.heading < 0) turtle.heading += 360;
+
+        this.draw();
+    }
+
+    // Fill support
+    beginFill() {
+        this.filling = true;
+        this.fillCommands = [];
+        this.fillStartX = this.currentTurtle.x;
+        this.fillStartY = this.currentTurtle.y;
+        this.fillColor = this.currentTurtle.penColor;
+    }
+
+    endFill() {
+        if (!this.filling) return;
+
+        this.filling = false;
+
+        // Create a fill command from collected path
+        if (this.fillCommands.length > 0) {
+            const command = {
+                type: 'fill',
+                commands: [...this.fillCommands],
+                color: this.fillColor,
+                startX: this.fillStartX,
+                startY: this.fillStartY
+            };
+            this.commands.push(command);
+            this.executeCommand(command);
+        }
+
+        this.fillCommands = [];
+        this.draw();
     }
 
     setBackground(color) {

@@ -47,6 +47,86 @@ class LogoInterpreter {
         };
     }
 
+    // ============== ERROR HELPERS ==============
+
+    // List of known commands for "Did you mean...?" suggestions
+    getKnownCommands() {
+        return [
+            'FORWARD', 'FD', 'BACK', 'BK', 'LEFT', 'LT', 'RIGHT', 'RT', 'HOME',
+            'SETPOS', 'SETX', 'SETY', 'SETHEADING', 'SETH',
+            'PENUP', 'PU', 'PENDOWN', 'PD', 'SETPENCOLOR', 'SETPC', 'SETPENSIZE',
+            'PENERASE', 'PE', 'PENPAINT', 'PPT', 'SETBACKGROUND', 'SETBG',
+            'CIRCLE', 'ARC', 'FILLED',
+            'CLEARSCREEN', 'CS', 'CLEAN', 'HIDETURTLE', 'HT', 'SHOWTURTLE', 'ST',
+            'WRAP', 'WINDOW', 'FENCE',
+            'REPEAT', 'IF', 'IFELSE', 'FOR', 'WHILE', 'STOP', 'OUTPUT', 'OP', 'WAIT',
+            'MAKE', 'LOCAL', 'PRINT', 'SHOW', 'TYPE', 'TELL', 'ASK',
+            'TO', 'END',
+            'SQRT', 'SIN', 'COS', 'TAN', 'ARCTAN', 'ABS', 'INT', 'ROUND', 'RANDOM',
+            'POWER', 'REMAINDER', 'MODULO',
+            'FIRST', 'LAST', 'BUTFIRST', 'BF', 'BUTLAST', 'BL', 'COUNT', 'ITEM',
+            'LIST', 'SENTENCE', 'SE', 'FPUT', 'LPUT',
+            'AND', 'OR', 'NOT', 'TRUE', 'FALSE',
+            'XCOR', 'YCOR', 'HEADING', 'POS', 'PENSIZE', 'PENCOLOR', 'PC', 'WHO', 'TURTLES'
+        ];
+    }
+
+    // Find similar command (simple Levenshtein-like check)
+    findSimilarCommand(unknown) {
+        unknown = unknown.toUpperCase();
+        const commands = this.getKnownCommands();
+
+        // Also include user procedures
+        const allCommands = [...commands, ...Object.keys(this.procedures)];
+
+        let bestMatch = null;
+        let bestScore = Infinity;
+
+        for (const cmd of allCommands) {
+            // Quick length check - if too different, skip
+            if (Math.abs(cmd.length - unknown.length) > 2) continue;
+
+            // Calculate simple edit distance
+            const score = this.editDistance(unknown, cmd);
+            if (score <= 2 && score < bestScore) {
+                bestScore = score;
+                bestMatch = cmd;
+            }
+        }
+
+        return bestMatch;
+    }
+
+    // Simple edit distance calculation
+    editDistance(a, b) {
+        if (a.length === 0) return b.length;
+        if (b.length === 0) return a.length;
+
+        const matrix = [];
+        for (let i = 0; i <= b.length; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= a.length; j++) {
+            matrix[0][j] = j;
+        }
+
+        for (let i = 1; i <= b.length; i++) {
+            for (let j = 1; j <= a.length; j++) {
+                if (b[i-1] === a[j-1]) {
+                    matrix[i][j] = matrix[i-1][j-1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i-1][j-1] + 1, // substitution
+                        matrix[i][j-1] + 1,   // insertion
+                        matrix[i-1][j] + 1    // deletion
+                    );
+                }
+            }
+        }
+
+        return matrix[b.length][a.length];
+    }
+
     // ============== TOKENIZER ==============
 
     tokenize(code) {
@@ -295,6 +375,9 @@ class LogoInterpreter {
                 if (token.value === '*') {
                     value = value * right.value;
                 } else {
+                    if (right.value === 0) {
+                        throw new Error("Oops! You can't divide by zero.");
+                    }
                     value = value / right.value;
                 }
             } else {
@@ -307,7 +390,7 @@ class LogoInterpreter {
 
     parseUnary(tokens, index) {
         if (index >= tokens.length) {
-            throw new Error('Unexpected end of expression');
+            throw new Error("I ran out of things to read! Did you forget to finish your code?");
         }
 
         const token = tokens[index];
@@ -322,7 +405,7 @@ class LogoInterpreter {
 
     parsePrimary(tokens, index) {
         if (index >= tokens.length) {
-            throw new Error('Unexpected end of expression');
+            throw new Error("I ran out of things to read! Did you forget to finish your code?");
         }
 
         const token = tokens[index];
@@ -331,7 +414,7 @@ class LogoInterpreter {
         if (token.type === 'LPAREN') {
             const result = this.parseAddSub(tokens, index + 1);
             if (result.index >= tokens.length || tokens[result.index].type !== 'RPAREN') {
-                throw new Error('Missing closing parenthesis');
+                throw new Error("You opened ( but forgot to close it with )");
             }
             return { value: result.value, index: result.index + 1 };
         }
@@ -365,7 +448,7 @@ class LogoInterpreter {
             return this.evaluateFunction(tokens, index);
         }
 
-        throw new Error(`Unexpected token: ${token.value}`);
+        throw new Error(`I don't understand "${token.value}" here. Check your code!`);
     }
 
     evaluateFunction(tokens, index) {
@@ -382,7 +465,7 @@ class LogoInterpreter {
             'ABS': (a) => Math.abs(a),
             'INT': (a) => Math.trunc(a),
             'ROUND': (a) => Math.round(a),
-            'RANDOM': (a) => Math.floor(Math.random() * a),
+            'RANDOM': (a) => a <= 0 ? 0 : Math.floor(Math.random() * a),
             'POWER': null, // Two args
             'REMAINDER': null, // Two args
             'MODULO': null, // Two args
@@ -400,6 +483,9 @@ class LogoInterpreter {
             if (funcName === 'REMAINDER' || funcName === 'MODULO') {
                 const arg1 = this.evaluateExpression(tokens, index);
                 const arg2 = this.evaluateExpression(tokens, arg1.index);
+                if (arg2.value === 0) {
+                    throw new Error("Oops! You can't divide by zero.");
+                }
                 return { value: arg1.value % arg2.value, index: arg2.index };
             }
             const arg = this.evaluateExpression(tokens, index);
@@ -437,23 +523,35 @@ class LogoInterpreter {
             const arg = this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
+                if (list.length === 0) {
+                    throw new Error("The list is empty! FIRST needs at least one item.");
+                }
                 return { value: list[0], index: arg.index };
             }
             if (typeof list === 'string') {
+                if (list.length === 0) {
+                    throw new Error("The word is empty! FIRST needs at least one character.");
+                }
                 return { value: list[0], index: arg.index };
             }
-            throw new Error('FIRST expects a list or word');
+            throw new Error('FIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'LAST') {
             const arg = this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
+                if (list.length === 0) {
+                    throw new Error("The list is empty! LAST needs at least one item.");
+                }
                 return { value: list[list.length - 1], index: arg.index };
             }
             if (typeof list === 'string') {
+                if (list.length === 0) {
+                    throw new Error("The word is empty! LAST needs at least one character.");
+                }
                 return { value: list[list.length - 1], index: arg.index };
             }
-            throw new Error('LAST expects a list or word');
+            throw new Error('LAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTFIRST' || funcName === 'BF') {
             const arg = this.evaluateExpression(tokens, index);
@@ -464,7 +562,7 @@ class LogoInterpreter {
             if (typeof list === 'string') {
                 return { value: list.slice(1), index: arg.index };
             }
-            throw new Error('BUTFIRST expects a list or word');
+            throw new Error('BUTFIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTLAST' || funcName === 'BL') {
             const arg = this.evaluateExpression(tokens, index);
@@ -475,7 +573,7 @@ class LogoInterpreter {
             if (typeof list === 'string') {
                 return { value: list.slice(0, -1), index: arg.index };
             }
-            throw new Error('BUTLAST expects a list or word');
+            throw new Error('BUTLAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'COUNT') {
             const arg = this.evaluateExpression(tokens, index);
@@ -486,18 +584,31 @@ class LogoInterpreter {
             if (typeof list === 'string') {
                 return { value: list.length, index: arg.index };
             }
-            throw new Error('COUNT expects a list or word');
+            throw new Error('COUNT needs a list like [1 2 3] or a word');
         }
         if (funcName === 'ITEM') {
             const idx = this.evaluateExpression(tokens, index);
             const list = this.evaluateExpression(tokens, idx.index);
+            const itemIndex = idx.value;
             if (Array.isArray(list.value)) {
-                return { value: list.value[idx.value - 1], index: list.index };
+                if (list.value.length === 0) {
+                    throw new Error("The list is empty! There are no items to get.");
+                }
+                if (itemIndex < 1 || itemIndex > list.value.length) {
+                    throw new Error(`Item ${itemIndex} doesn't exist! The list only has ${list.value.length} item${list.value.length === 1 ? '' : 's'}.`);
+                }
+                return { value: list.value[itemIndex - 1], index: list.index };
             }
             if (typeof list.value === 'string') {
-                return { value: list.value[idx.value - 1], index: list.index };
+                if (list.value.length === 0) {
+                    throw new Error("The word is empty! There are no characters to get.");
+                }
+                if (itemIndex < 1 || itemIndex > list.value.length) {
+                    throw new Error(`Character ${itemIndex} doesn't exist! The word only has ${list.value.length} character${list.value.length === 1 ? '' : 's'}.`);
+                }
+                return { value: list.value[itemIndex - 1], index: list.index };
             }
-            throw new Error('ITEM expects a list or word');
+            throw new Error('ITEM needs a list like [1 2 3] or a word');
         }
         if (funcName === 'LIST') {
             const items = [];
@@ -528,7 +639,7 @@ class LogoInterpreter {
             const item = this.evaluateExpression(tokens, index);
             const list = this.evaluateExpression(tokens, item.index);
             if (!Array.isArray(list.value)) {
-                throw new Error('FPUT expects a list as second argument');
+                throw new Error('FPUT needs a list: FPUT "hello [1 2 3] puts "hello at the front');
             }
             return { value: [item.value, ...list.value], index: list.index };
         }
@@ -536,7 +647,7 @@ class LogoInterpreter {
             const item = this.evaluateExpression(tokens, index);
             const list = this.evaluateExpression(tokens, item.index);
             if (!Array.isArray(list.value)) {
-                throw new Error('LPUT expects a list as second argument');
+                throw new Error('LPUT needs a list: LPUT "hello [1 2 3] puts "hello at the end');
             }
             return { value: [...list.value, item.value], index: list.index };
         }
@@ -643,7 +754,7 @@ class LogoInterpreter {
             return { value: false, index };
         }
 
-        throw new Error(`Unknown function: ${funcName}`);
+        throw new Error(`I don't know the function "${funcName}". Check your spelling!`);
     }
 
     isTruthy(value) {
@@ -666,7 +777,7 @@ class LogoInterpreter {
         if (name in this.globalVariables) {
             return this.globalVariables[name];
         }
-        throw new Error(`Variable not found: ${name}`);
+        throw new Error(`I don't know the variable :${name} yet. Did you create it with MAKE first?`);
     }
 
     setVariable(name, value) {
@@ -831,6 +942,31 @@ class LogoInterpreter {
             return result.index;
         }
 
+        // ===== SHAPE COMMANDS =====
+        if (command === 'CIRCLE') {
+            const result = this.evaluateExpression(tokens, index);
+            this.turtle.circle(result.value);
+            return result.index;
+        }
+        if (command === 'ARC') {
+            const angleResult = this.evaluateExpression(tokens, index);
+            const radiusResult = this.evaluateExpression(tokens, angleResult.index);
+            this.turtle.arc(angleResult.value, radiusResult.value);
+            return radiusResult.index;
+        }
+        if (command === 'FILLED') {
+            if (tokens[index]?.type !== 'LBRACKET') {
+                throw new Error("FILLED needs commands in brackets: FILLED [REPEAT 4 [FD 100 RT 90]]");
+            }
+            const blockResult = this.parseList(tokens, index + 1);
+
+            this.turtle.beginFill();
+            await this.executeBlock(blockResult.list);
+            this.turtle.endFill();
+
+            return blockResult.endIndex;
+        }
+
         // ===== SCREEN COMMANDS =====
         if (command === 'CLEARSCREEN' || command === 'CS') {
             this.turtle.clearScreen();
@@ -868,7 +1004,7 @@ class LogoInterpreter {
             index = countResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('REPEAT requires a list of commands');
+                throw new Error("REPEAT needs commands in brackets, like: REPEAT 4 [FD 100 RT 90]");
             }
             const blockResult = this.parseList(tokens, index + 1);
 
@@ -887,7 +1023,7 @@ class LogoInterpreter {
             index = condResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('IF requires a list of commands');
+                throw new Error("IF needs commands in brackets, like: IF :x > 5 [PRINT :x]");
             }
             const blockResult = this.parseList(tokens, index + 1);
 
@@ -903,13 +1039,13 @@ class LogoInterpreter {
             index = condResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('IFELSE requires two lists of commands');
+                throw new Error("IFELSE needs two bracket groups: IFELSE condition [do if true] [do if false]");
             }
             const trueBlock = this.parseList(tokens, index + 1);
             index = trueBlock.endIndex;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('IFELSE requires two lists of commands');
+                throw new Error("IFELSE needs two bracket groups: IFELSE condition [do if true] [do if false]");
             }
             const falseBlock = this.parseList(tokens, index + 1);
 
@@ -924,13 +1060,13 @@ class LogoInterpreter {
 
         if (command === 'FOR') {
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('FOR requires a control list [var start end] or [var start end step]');
+                throw new Error("FOR needs a control list like [i 1 10], for example: FOR [i 1 10] [PRINT :i]");
             }
             const controlList = this.parseList(tokens, index + 1);
             index = controlList.endIndex;
 
             if (controlList.list.length < 3) {
-                throw new Error('FOR control list must have at least [var start end]');
+                throw new Error("FOR control list needs at least 3 things: [variable start end]");
             }
 
             const varName = controlList.list[0].value;
@@ -942,8 +1078,12 @@ class LogoInterpreter {
                 step = stepResult.value;
             }
 
+            if (step === 0) {
+                throw new Error("FOR loop step can't be zero - the loop would never end!");
+            }
+
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('FOR requires a body list');
+                throw new Error("FOR needs commands in brackets after the control list");
             }
             const bodyBlock = this.parseList(tokens, index + 1);
 
@@ -969,13 +1109,13 @@ class LogoInterpreter {
 
         if (command === 'WHILE') {
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('WHILE requires a condition list');
+                throw new Error("WHILE needs a condition in brackets: WHILE [:x < 10] [commands]");
             }
             const condBlock = this.parseList(tokens, index + 1);
             index = condBlock.endIndex;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('WHILE requires a body list');
+                throw new Error("WHILE needs commands in brackets after the condition");
             }
             const bodyBlock = this.parseList(tokens, index + 1);
 
@@ -1051,7 +1191,7 @@ class LogoInterpreter {
             index = idResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
-                throw new Error('ASK requires a list of commands');
+                throw new Error("ASK needs commands in brackets: ASK 1 [FD 100]");
             }
             const blockResult = this.parseList(tokens, index + 1);
 
@@ -1090,12 +1230,17 @@ class LogoInterpreter {
             return index;
         }
 
-        throw new Error(`Unknown command: ${command}`);
+        // Try to find a similar command for helpful suggestion
+        const suggestion = this.findSimilarCommand(command);
+        if (suggestion) {
+            throw new Error(`I don't know "${command}". Did you mean ${suggestion}?`);
+        }
+        throw new Error(`I don't know the command "${command}". Check your spelling or use HELP to see all commands.`);
     }
 
     defineProcedure(tokens, index) {
         if (index >= tokens.length || tokens[index].type !== 'WORD') {
-            throw new Error('TO requires a procedure name');
+            throw new Error('TO needs a name for your procedure: TO SQUARE ... END');
         }
 
         const name = tokens[index].value.toUpperCase();
@@ -1125,7 +1270,7 @@ class LogoInterpreter {
         }
 
         if (index >= tokens.length) {
-            throw new Error(`Procedure ${name} has no END`);
+            throw new Error(`Your procedure ${name} is missing END. Every TO needs an END!`);
         }
 
         this.procedures[name] = { params, body };

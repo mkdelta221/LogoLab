@@ -5,11 +5,51 @@
 
 // Example programs
 const EXAMPLES = {
+    triangle: `; Draw a simple triangle
+; Triangles have 3 sides, turn 120 degrees (360/3)
+SETPC "blue
+REPEAT 3 [
+  FD 100
+  RT 120
+]`,
+
     square: `; Draw a square
 REPEAT 4 [
   FD 100
   RT 90
 ]`,
+
+    house: `; Draw a house (square + triangle roof)
+; First, draw the square base
+SETPC "brown
+REPEAT 4 [FD 80 RT 90]
+
+; Move to the top of the square
+FD 80
+
+; Draw the triangle roof
+SETPC "red
+RT 30
+REPEAT 3 [FD 80 RT 120]`,
+
+    smiley: `; Draw a smiley face using CIRCLE and ARC
+; Face outline
+SETPC "yellow
+FILLED [CIRCLE 80]
+
+; Left eye
+SETPC "black
+PU SETPOS [-25 20] PD
+FILLED [CIRCLE 10]
+
+; Right eye
+PU SETPOS [25 20] PD
+FILLED [CIRCLE 10]
+
+; Smile (arc)
+PU SETPOS [-35 -15] PD
+SETH 0
+ARC 180 35`,
 
     star: `; Draw a 5-pointed star
 SETPC "gold
@@ -194,6 +234,16 @@ class LogoLabApp {
         this.themeIcon = document.getElementById('theme-icon');
         this.currentTheme = localStorage.getItem('logolab-theme') || 'dark';
 
+        // Sound
+        this.btnSound = document.getElementById('btn-sound');
+        this.soundIcon = document.getElementById('sound-icon');
+        this.soundEnabled = localStorage.getItem('logolab-sound') !== 'false';
+
+        // Tutorial progress
+        this.tutorialProgress = JSON.parse(localStorage.getItem('logolab-tutorial-progress') || '{}');
+        this.progressText = document.getElementById('progress-text');
+        this.progressFill = document.getElementById('progress-fill');
+
         // Variables panel
         this.variablesPanel = document.getElementById('variables-panel');
         this.variablesContent = document.getElementById('variables-content');
@@ -210,6 +260,12 @@ class LogoLabApp {
 
         // Apply theme
         this.applyTheme();
+
+        // Apply sound setting
+        this.updateSoundIcon();
+
+        // Update tutorial progress display
+        this.updateTutorialProgress();
 
         // Load code from URL or auto-save
         this.loadInitialCode();
@@ -304,6 +360,11 @@ class LogoLabApp {
         // Theme toggle button
         if (this.btnTheme) {
             this.btnTheme.addEventListener('click', () => this.toggleTheme());
+        }
+
+        // Sound toggle button
+        if (this.btnSound) {
+            this.btnSound.addEventListener('click', () => this.toggleSound());
         }
 
         // Variables panel toggle
@@ -485,9 +546,11 @@ class LogoLabApp {
         try {
             await this.interpreter.execute(code);
             this.appendOutput('Done.\n', false, 'info');
+            this.playSound('success');
         } catch (e) {
             if (e.type !== 'STOP' && e.type !== 'OUTPUT') {
                 this.appendOutput('Error: ' + e.message + '\n', true);
+                this.playSound('error');
             }
         } finally {
             this.btnRun.disabled = false;
@@ -551,6 +614,7 @@ class LogoLabApp {
     showTutorials() {
         if (this.tutorialsModal) {
             this.tutorialsModal.classList.remove('hidden');
+            this.updateTutorialProgress();
             this.loadTutorialLesson(1);
         }
     }
@@ -563,8 +627,27 @@ class LogoLabApp {
 
     loadTutorialLesson(lessonNum) {
         const content = document.getElementById('tutorial-content');
+        this.currentTutorialLesson = lessonNum;
+
         if (content && this.tutorialManager) {
-            content.innerHTML = this.tutorialManager.getLessonContent(lessonNum);
+            let lessonHtml = this.tutorialManager.getLessonContent(lessonNum);
+
+            // Add "Mark Complete" button at the end if not already completed
+            if (!this.tutorialProgress[lessonNum]) {
+                lessonHtml += `
+                    <div class="mark-complete-section">
+                        <button class="btn btn-success mark-complete" data-lesson="${lessonNum}">
+                            ✓ Mark Lesson ${lessonNum} Complete
+                        </button>
+                    </div>`;
+            } else {
+                lessonHtml += `
+                    <div class="mark-complete-section completed-badge">
+                        <span>✓ Lesson completed!</span>
+                    </div>`;
+            }
+
+            content.innerHTML = lessonHtml;
 
             // Add click handlers for "Try It" buttons
             content.querySelectorAll('.try-code').forEach(btn => {
@@ -581,6 +664,15 @@ class LogoLabApp {
                     this.hideTutorials();
                 });
             });
+
+            // Add click handler for "Mark Complete" button
+            const markCompleteBtn = content.querySelector('.mark-complete');
+            if (markCompleteBtn) {
+                markCompleteBtn.addEventListener('click', () => {
+                    this.markLessonComplete(lessonNum);
+                    this.loadTutorialLesson(lessonNum); // Reload to update UI
+                });
+            }
         }
     }
 
@@ -661,6 +753,81 @@ class LogoLabApp {
         if (this.themeIcon) {
             this.themeIcon.textContent = this.currentTheme === 'dark' ? '☀️' : '🌙';
         }
+    }
+
+    // Sound effects
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        localStorage.setItem('logolab-sound', this.soundEnabled);
+        this.updateSoundIcon();
+    }
+
+    updateSoundIcon() {
+        if (this.soundIcon) {
+            this.soundIcon.textContent = this.soundEnabled ? '🔊' : '🔇';
+        }
+    }
+
+    playSound(type) {
+        if (!this.soundEnabled) return;
+
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523, ctx.currentTime); // C5
+                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.1); // E5
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            } else if (type === 'error') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, ctx.currentTime);
+                gain.gain.setValueAtTime(0.2, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.15);
+            }
+        } catch (e) {
+            // Audio not supported, fail silently
+        }
+    }
+
+    // Tutorial progress tracking
+    updateTutorialProgress() {
+        const completedCount = Object.values(this.tutorialProgress).filter(v => v).length;
+        const total = 6;
+
+        if (this.progressText) {
+            this.progressText.textContent = `${completedCount}/${total} complete`;
+        }
+        if (this.progressFill) {
+            this.progressFill.style.width = `${(completedCount / total) * 100}%`;
+        }
+
+        // Update tutorial items with checkmarks
+        document.querySelectorAll('.tutorial-item').forEach(item => {
+            const lesson = item.dataset.lesson;
+            if (this.tutorialProgress[lesson]) {
+                item.classList.add('completed');
+            } else {
+                item.classList.remove('completed');
+            }
+        });
+    }
+
+    markLessonComplete(lessonNum) {
+        this.tutorialProgress[lessonNum] = true;
+        localStorage.setItem('logolab-tutorial-progress', JSON.stringify(this.tutorialProgress));
+        this.updateTutorialProgress();
+        this.playSound('success');
     }
 
     toggleVariablesPanel() {
