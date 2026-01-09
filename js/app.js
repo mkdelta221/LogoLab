@@ -46,10 +46,10 @@ FILLED [CIRCLE 10]
 PU SETPOS [25 20] PD
 FILLED [CIRCLE 10]
 
-; Smile (arc)
+; Smile (arc curving down)
 PU SETPOS [-35 -15] PD
 SETH 0
-ARC 180 35`,
+ARC -180 35`,
 
     star: `; Draw a 5-pointed star
 SETPC "gold
