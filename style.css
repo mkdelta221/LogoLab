@@ -201,8 +201,12 @@ body {
     font-size: 14px;
     line-height: 1.5;
     resize: none;
-    outline: none;
     tab-size: 2;
+}
+
+#code-editor:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: -2px;
 }
 
 #code-editor::placeholder {
@@ -776,11 +780,15 @@ body.light-theme .btn-primary {
     color: var(--text-primary);
     font-size: 0.85rem;
     cursor: pointer;
-    outline: none;
 }
 
 .speed-select:hover {
     background: var(--border-color);
+}
+
+.speed-select:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
 }
 
 /* Warning Button (Step) */
@@ -837,7 +845,6 @@ body.light-theme .btn-primary {
     font-size: 14px;
     line-height: 1.5;
     resize: none;
-    outline: none;
     tab-size: 2;
 }
 
@@ -1268,5 +1275,85 @@ body.light-theme .token-procedure { color: #795e26; }
     .btn, .help-tab, .tutorial-item {
         -webkit-user-select: none;
         user-select: none;
+    }
+}
+
+/* ==================== ACCESSIBILITY ==================== */
+
+/* Focus indicators for all interactive elements */
+.btn:focus,
+.btn-small:focus,
+.btn-close:focus,
+.help-tab:focus,
+.example-item:focus,
+.tutorial-item:focus {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* High contrast focus for better visibility */
+.btn:focus-visible,
+.btn-small:focus-visible,
+.btn-close:focus-visible {
+    outline: 3px solid var(--accent-primary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 6px rgba(78, 205, 196, 0.2);
+}
+
+/* Skip link - visually hidden until focused */
+.skip-link {
+    position: absolute;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    font-weight: 600;
+    z-index: 9999;
+    text-decoration: none;
+    transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+    top: 10px;
+    outline: 3px solid var(--accent-secondary);
+    outline-offset: 2px;
+}
+
+/* Visually hidden but accessible to screen readers */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    .btn:hover,
+    .example-item:hover,
+    .try-code:hover,
+    .btn-success:hover {
+        transform: none !important;
+    }
+
+    .progress-fill {
+        transition: none !important;
     }
 }

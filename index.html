@@ -8,49 +8,53 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐢</text></svg>">
 </head>
 <body>
+    <!-- Skip link for keyboard users -->
+    <a href="#code-editor" class="skip-link">Skip to code editor</a>
+
     <div id="app">
         <!-- Header -->
-        <header id="header">
+        <header id="header" role="banner">
             <div class="header-left">
                 <h1>LogoLab</h1>
                 <span class="tagline">Learn Programming with Turtle Graphics</span>
             </div>
-            <div class="header-right">
-                <select id="speed-select" class="speed-select" title="Animation Speed">
+            <nav class="header-right" role="toolbar" aria-label="Main controls">
+                <label for="speed-select" class="sr-only">Animation Speed</label>
+                <select id="speed-select" class="speed-select" aria-label="Animation Speed">
                     <option value="0">Instant</option>
                     <option value="10">Fast</option>
                     <option value="50" selected>Medium</option>
                     <option value="150">Slow</option>
                     <option value="500">Very Slow</option>
                 </select>
-                <button id="btn-run" class="btn btn-primary" title="Run (Ctrl+Enter)">
-                    <span class="icon">▶</span> Run
+                <button id="btn-run" class="btn btn-primary" title="Run (Ctrl+Enter)" aria-label="Run code (Ctrl+Enter)">
+                    <span class="icon" aria-hidden="true">▶</span> <span>Run</span>
                 </button>
-                <button id="btn-step" class="btn btn-warning" title="Run Slowly (F10)">
-                    <span class="icon">→</span> Slow
+                <button id="btn-step" class="btn btn-warning" title="Run Slowly (F10)" aria-label="Run slowly (F10)">
+                    <span class="icon" aria-hidden="true">→</span> <span>Slow</span>
                 </button>
-                <button id="btn-stop" class="btn btn-danger" title="Stop (Escape)" disabled>
-                    <span class="icon">■</span> Stop
+                <button id="btn-stop" class="btn btn-danger" title="Stop (Escape)" aria-label="Stop execution (Escape)" disabled>
+                    <span class="icon" aria-hidden="true">■</span> <span>Stop</span>
                 </button>
-                <button id="btn-clear" class="btn" title="Clear Canvas">
-                    <span class="icon">🗑</span> Clear
+                <button id="btn-clear" class="btn" title="Clear Canvas" aria-label="Clear canvas">
+                    <span class="icon" aria-hidden="true">🗑</span> <span>Clear</span>
                 </button>
-                <button id="btn-share" class="btn" title="Share Code">
-                    <span class="icon">🔗</span> Share
+                <button id="btn-share" class="btn" title="Share Code" aria-label="Share code">
+                    <span class="icon" aria-hidden="true">🔗</span> <span>Share</span>
                 </button>
-                <button id="btn-learn" class="btn btn-learn" title="Interactive Tutorials">
-                    <span class="icon">📚</span> Learn
+                <button id="btn-learn" class="btn btn-learn" title="Interactive Tutorials" aria-label="Open interactive tutorials">
+                    <span class="icon" aria-hidden="true">📚</span> <span>Learn</span>
                 </button>
-                <button id="btn-help" class="btn" title="Help (F1)">
-                    <span class="icon">?</span> Help
+                <button id="btn-help" class="btn" title="Help (F1)" aria-label="Open help (F1)">
+                    <span class="icon" aria-hidden="true">?</span> <span>Help</span>
                 </button>
-                <button id="btn-theme" class="btn btn-icon" title="Toggle Theme">
-                    <span class="icon" id="theme-icon">🌙</span>
+                <button id="btn-theme" class="btn btn-icon" title="Toggle Theme" aria-label="Toggle light/dark theme">
+                    <span class="icon" id="theme-icon" aria-hidden="true">🌙</span>
                 </button>
-                <button id="btn-sound" class="btn btn-icon" title="Toggle Sound">
-                    <span class="icon" id="sound-icon">🔊</span>
+                <button id="btn-sound" class="btn btn-icon" title="Toggle Sound" aria-label="Toggle sound effects">
+                    <span class="icon" id="sound-icon" aria-hidden="true">🔊</span>
                 </button>
-            </div>
+            </nav>
         </header>
 
         <!-- Main Content -->
@@ -64,10 +68,11 @@
                     </div>
                 </div>
                 <div id="editor-container">
-                    <div id="line-numbers"></div>
+                    <div id="line-numbers" aria-hidden="true"></div>
                     <div id="editor-wrapper">
                         <pre id="syntax-highlight" aria-hidden="true"></pre>
-                        <textarea id="code-editor" spellcheck="false" placeholder="Type your Logo code here...
+                        <label for="code-editor" class="sr-only">Logo code editor</label>
+                        <textarea id="code-editor" spellcheck="false" aria-label="Logo code editor" placeholder="Type your Logo code here...
 
 Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                     </div>
@@ -95,46 +100,48 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                     </div>
                 </div>
                 <div id="canvas-container">
-                    <canvas id="turtle-canvas"></canvas>
+                    <canvas id="turtle-canvas" role="img" aria-label="Turtle graphics canvas - displays the output of your Logo code"></canvas>
                 </div>
             </div>
         </main>
 
         <!-- Output Panel -->
-        <div id="output-panel" class="panel">
+        <div id="output-panel" class="panel" role="region" aria-label="Output console">
             <div class="panel-header">
-                <span>Output</span>
+                <span id="output-label">Output</span>
                 <div class="panel-actions">
-                    <button id="btn-clear-output" class="btn-small" title="Clear Output">Clear</button>
+                    <button id="btn-clear-output" class="btn-small" title="Clear Output" aria-label="Clear output console">Clear</button>
                 </div>
             </div>
-            <div id="output-console"></div>
+            <div id="output-console" role="log" aria-live="polite" aria-labelledby="output-label" aria-relevant="additions"></div>
         </div>
 
         <!-- Footer -->
-        <footer id="footer">
+        <footer id="footer" role="contentinfo">
             <div class="footer-left">
-                <button id="btn-new" class="btn-small" title="New Project">New</button>
-                <button id="btn-save" class="btn-small" title="Save Project">Save</button>
-                <button id="btn-load" class="btn-small" title="Load Project">Load</button>
-                <input type="file" id="file-input" accept=".logo,.txt" style="display: none;">
+                <button id="btn-new" class="btn-small" title="New Project" aria-label="Create new project">New</button>
+                <button id="btn-save" class="btn-small" title="Save Project" aria-label="Save project">Save</button>
+                <button id="btn-load" class="btn-small" title="Load Project" aria-label="Load project">Load</button>
+                <input type="file" id="file-input" accept=".logo,.txt" style="display: none;" aria-label="Choose file to load">
             </div>
             <div class="footer-center">
-                <a href="https://ko-fi.com/cyborgninja" target="_blank" class="donate-link" title="Support LogoLab">
+                <a href="https://ko-fi.com/cyborgninja" target="_blank" class="donate-link" title="Support LogoLab" rel="noopener">
                     ☕ Support this project
                 </a>
             </div>
             <div class="footer-right">
-                <span>Inspired by <a href="https://fmslogo.sourceforge.io/" target="_blank">FMSLogo</a></span>
+                <span>Inspired by <a href="https://fmslogo.sourceforge.io/" target="_blank" rel="noopener">FMSLogo</a></span>
+                <span aria-hidden="true">|</span>
+                <button id="btn-accessibility" class="btn-small" aria-label="View accessibility statement">Accessibility</button>
             </div>
         </footer>
 
         <!-- Help Modal -->
-        <div id="help-modal" class="modal hidden">
+        <div id="help-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>LogoLab Command Reference</h2>
-                    <button id="btn-close-help" class="btn-close">&times;</button>
+                    <h2 id="help-modal-title">LogoLab Command Reference</h2>
+                    <button id="btn-close-help" class="btn-close" aria-label="Close help">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="help-tabs">
@@ -307,65 +314,65 @@ PRINT DOUBLE 5  ; prints 10</pre>
         </div>
 
         <!-- Examples Modal -->
-        <div id="examples-modal" class="modal hidden">
+        <div id="examples-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="examples-modal-title">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>Example Programs</h2>
-                    <button id="btn-close-examples" class="btn-close">&times;</button>
+                    <h2 id="examples-modal-title">Example Programs</h2>
+                    <button id="btn-close-examples" class="btn-close" aria-label="Close examples">&times;</button>
                 </div>
                 <div class="modal-body">
-                    <div class="examples-list">
-                        <div class="example-item" data-example="triangle">
+                    <div class="examples-list" role="list">
+                        <div class="example-item" data-example="triangle" role="button" tabindex="0" aria-label="Load Triangle example - Beginner">
                             <span class="difficulty-badge beginner">Beginner</span>
                             <h4>Triangle</h4>
                             <p>Draw a simple triangle</p>
                         </div>
-                        <div class="example-item" data-example="square">
+                        <div class="example-item" data-example="square" role="button" tabindex="0" aria-label="Load Square example - Beginner">
                             <span class="difficulty-badge beginner">Beginner</span>
                             <h4>Square</h4>
                             <p>Draw a simple square</p>
                         </div>
-                        <div class="example-item" data-example="house">
+                        <div class="example-item" data-example="house" role="button" tabindex="0" aria-label="Load House example - Beginner">
                             <span class="difficulty-badge beginner">Beginner</span>
                             <h4>House</h4>
                             <p>Draw a house with a roof</p>
                         </div>
-                        <div class="example-item" data-example="star">
+                        <div class="example-item" data-example="star" role="button" tabindex="0" aria-label="Load Star example - Intermediate">
                             <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Star</h4>
                             <p>Draw a 5-pointed star</p>
                         </div>
-                        <div class="example-item" data-example="smiley">
+                        <div class="example-item" data-example="smiley" role="button" tabindex="0" aria-label="Load Smiley Face example - Intermediate">
                             <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Smiley Face</h4>
                             <p>Draw a smiley using CIRCLE and ARC</p>
                         </div>
-                        <div class="example-item" data-example="flower">
+                        <div class="example-item" data-example="flower" role="button" tabindex="0" aria-label="Load Flower example - Intermediate">
                             <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Flower</h4>
                             <p>Draw a flower pattern</p>
                         </div>
-                        <div class="example-item" data-example="rainbow">
+                        <div class="example-item" data-example="rainbow" role="button" tabindex="0" aria-label="Load Rainbow example - Intermediate">
                             <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Rainbow</h4>
                             <p>Draw a colorful rainbow</p>
                         </div>
-                        <div class="example-item" data-example="polygon">
+                        <div class="example-item" data-example="polygon" role="button" tabindex="0" aria-label="Load Polygon Procedure example - Intermediate">
                             <span class="difficulty-badge intermediate">Intermediate</span>
                             <h4>Polygon Procedure</h4>
                             <p>Define and use a polygon procedure</p>
                         </div>
-                        <div class="example-item" data-example="spiral">
+                        <div class="example-item" data-example="spiral" role="button" tabindex="0" aria-label="Load Spiral example - Advanced">
                             <span class="difficulty-badge advanced">Advanced</span>
                             <h4>Spiral</h4>
                             <p>Draw a recursive spiral</p>
                         </div>
-                        <div class="example-item" data-example="tree">
+                        <div class="example-item" data-example="tree" role="button" tabindex="0" aria-label="Load Recursive Tree example - Advanced">
                             <span class="difficulty-badge advanced">Advanced</span>
                             <h4>Recursive Tree</h4>
                             <p>Draw a fractal tree</p>
                         </div>
-                        <div class="example-item" data-example="sierpinski">
+                        <div class="example-item" data-example="sierpinski" role="button" tabindex="0" aria-label="Load Sierpinski Triangle example - Advanced">
                             <span class="difficulty-badge advanced">Advanced</span>
                             <h4>Sierpinski Triangle</h4>
                             <p>Draw a fractal triangle</p>
@@ -376,46 +383,46 @@ PRINT DOUBLE 5  ; prints 10</pre>
         </div>
 
         <!-- Tutorials Modal -->
-        <div id="tutorials-modal" class="modal hidden">
+        <div id="tutorials-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="tutorials-modal-title">
             <div class="modal-content modal-large">
                 <div class="modal-header">
-                    <h2>Learn Logo Programming</h2>
+                    <h2 id="tutorials-modal-title">Learn Logo Programming</h2>
                     <div class="tutorial-progress">
                         <span id="progress-text">0/6 complete</span>
                         <div class="progress-bar">
                             <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
                         </div>
                     </div>
-                    <button id="btn-close-tutorials" class="btn-close">&times;</button>
+                    <button id="btn-close-tutorials" class="btn-close" aria-label="Close tutorials">&times;</button>
                 </div>
                 <div class="modal-body tutorials-body">
-                    <div class="tutorials-sidebar">
-                        <div class="tutorial-item active" data-lesson="1">
-                            <span class="lesson-num">1</span>
+                    <nav class="tutorials-sidebar" role="tablist" aria-label="Tutorial lessons">
+                        <div class="tutorial-item active" data-lesson="1" role="tab" tabindex="0" aria-selected="true" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">1</span>
                             <span>Moving the Turtle</span>
                         </div>
-                        <div class="tutorial-item" data-lesson="2">
-                            <span class="lesson-num">2</span>
+                        <div class="tutorial-item" data-lesson="2" role="tab" tabindex="0" aria-selected="false" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">2</span>
                             <span>Drawing Shapes</span>
                         </div>
-                        <div class="tutorial-item" data-lesson="3">
-                            <span class="lesson-num">3</span>
+                        <div class="tutorial-item" data-lesson="3" role="tab" tabindex="0" aria-selected="false" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">3</span>
                             <span>Colors & Pen</span>
                         </div>
-                        <div class="tutorial-item" data-lesson="4">
-                            <span class="lesson-num">4</span>
+                        <div class="tutorial-item" data-lesson="4" role="tab" tabindex="0" aria-selected="false" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">4</span>
                             <span>Loops with REPEAT</span>
                         </div>
-                        <div class="tutorial-item" data-lesson="5">
-                            <span class="lesson-num">5</span>
+                        <div class="tutorial-item" data-lesson="5" role="tab" tabindex="0" aria-selected="false" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">5</span>
                             <span>Creating Procedures</span>
                         </div>
-                        <div class="tutorial-item" data-lesson="6">
-                            <span class="lesson-num">6</span>
+                        <div class="tutorial-item" data-lesson="6" role="tab" tabindex="0" aria-selected="false" aria-controls="tutorial-content">
+                            <span class="lesson-num" aria-hidden="true">6</span>
                             <span>Variables</span>
                         </div>
-                    </div>
-                    <div class="tutorials-content" id="tutorial-content">
+                    </nav>
+                    <div class="tutorials-content" id="tutorial-content" role="tabpanel" aria-label="Tutorial content">
                         <!-- Content loaded dynamically -->
                     </div>
                 </div>
@@ -423,11 +430,11 @@ PRINT DOUBLE 5  ; prints 10</pre>
         </div>
 
         <!-- Share Modal -->
-        <div id="share-modal" class="modal hidden">
+        <div id="share-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
             <div class="modal-content modal-small">
                 <div class="modal-header">
-                    <h2>Share Your Code</h2>
-                    <button id="btn-close-share" class="btn-close">&times;</button>
+                    <h2 id="share-modal-title">Share Your Code</h2>
+                    <button id="btn-close-share" class="btn-close" aria-label="Close share dialog">&times;</button>
                 </div>
                 <div class="modal-body">
                     <p>Share this link with others:</p>
@@ -436,6 +443,42 @@ PRINT DOUBLE 5  ; prints 10</pre>
                         <button id="btn-copy-url" class="btn btn-primary">Copy</button>
                     </div>
                     <p class="share-note">Anyone with this link can view and edit your code.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accessibility Statement Modal -->
+        <div id="accessibility-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="accessibility-modal-title">
+            <div class="modal-content modal-small">
+                <div class="modal-header">
+                    <h2 id="accessibility-modal-title">Accessibility Statement</h2>
+                    <button id="btn-close-accessibility" class="btn-close" aria-label="Close accessibility statement">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h3>Commitment to Accessibility</h3>
+                    <p>LogoLab is committed to ensuring digital accessibility for all users, including those with disabilities. We strive to comply with <strong>WCAG 2.1 Level AA</strong> guidelines and the <strong>European Accessibility Act (EAA)</strong>.</p>
+
+                    <h4>Accessibility Features</h4>
+                    <ul>
+                        <li>Full keyboard navigation support</li>
+                        <li>Screen reader compatible interface</li>
+                        <li>High contrast focus indicators</li>
+                        <li>Reduced motion support for users with vestibular disorders</li>
+                        <li>Skip link to bypass navigation</li>
+                        <li>ARIA labels for all interactive elements</li>
+                        <li>Light and dark theme options</li>
+                    </ul>
+
+                    <h4>Known Limitations</h4>
+                    <ul>
+                        <li>Canvas drawings are visual and cannot be fully described to screen reader users</li>
+                        <li>Some third-party code examples may not be accessible</li>
+                    </ul>
+
+                    <h4>Feedback</h4>
+                    <p>If you encounter accessibility barriers or have suggestions for improvement, please <a href="https://github.com/mkdelta221/LogoLab/issues" target="_blank" rel="noopener">open an issue on GitHub</a>.</p>
+
+                    <p class="share-note"><em>Last updated: January 2026</em></p>
                 </div>
             </div>
         </div>

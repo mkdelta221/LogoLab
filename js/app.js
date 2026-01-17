@@ -229,6 +229,7 @@ class LogoLabApp {
         this.examplesModal = document.getElementById('examples-modal');
         this.tutorialsModal = document.getElementById('tutorials-modal');
         this.shareModal = document.getElementById('share-modal');
+        this.accessibilityModal = document.getElementById('accessibility-modal');
 
         // Theme
         this.themeIcon = document.getElementById('theme-icon');
@@ -305,9 +306,9 @@ class LogoLabApp {
         this.btnExamples.addEventListener('click', () => this.showExamples());
         document.getElementById('btn-close-examples').addEventListener('click', () => this.hideExamples());
 
-        // Example items
+        // Example items - click and keyboard support
         document.querySelectorAll('.example-item').forEach(item => {
-            item.addEventListener('click', () => {
+            const loadExample = () => {
                 const example = item.dataset.example;
                 if (EXAMPLES[example]) {
                     // Stop any running program first
@@ -320,6 +321,13 @@ class LogoLabApp {
                     // Now load the new example
                     this.editor.setValue(EXAMPLES[example]);
                     this.hideExamples();
+                }
+            };
+            item.addEventListener('click', loadExample);
+            item.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    loadExample();
                 }
             });
         });
@@ -395,13 +403,24 @@ class LogoLabApp {
         if (this.tutorialsModal) {
             document.getElementById('btn-close-tutorials')?.addEventListener('click', () => this.hideTutorials());
 
-            // Tutorial lesson items
+            // Tutorial lesson items - click and keyboard support
             document.querySelectorAll('.tutorial-item').forEach(item => {
-                item.addEventListener('click', () => {
+                const selectLesson = () => {
                     const lesson = parseInt(item.dataset.lesson);
                     this.loadTutorialLesson(lesson);
-                    document.querySelectorAll('.tutorial-item').forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll('.tutorial-item').forEach(i => {
+                        i.classList.remove('active');
+                        i.setAttribute('aria-selected', 'false');
+                    });
                     item.classList.add('active');
+                    item.setAttribute('aria-selected', 'true');
+                };
+                item.addEventListener('click', selectLesson);
+                item.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectLesson();
+                    }
                 });
             });
         }
@@ -410,6 +429,12 @@ class LogoLabApp {
         if (this.shareModal) {
             document.getElementById('btn-close-share')?.addEventListener('click', () => this.hideShareModal());
             document.getElementById('btn-copy-url')?.addEventListener('click', () => this.copyShareUrl());
+        }
+
+        // Accessibility modal
+        if (this.accessibilityModal) {
+            document.getElementById('btn-accessibility')?.addEventListener('click', () => this.showAccessibilityModal());
+            document.getElementById('btn-close-accessibility')?.addEventListener('click', () => this.hideAccessibilityModal());
         }
 
         // Close modals on backdrop click
@@ -427,6 +452,11 @@ class LogoLabApp {
         if (this.shareModal) {
             this.shareModal.addEventListener('click', (e) => {
                 if (e.target === this.shareModal) this.hideShareModal();
+            });
+        }
+        if (this.accessibilityModal) {
+            this.accessibilityModal.addEventListener('click', (e) => {
+                if (e.target === this.accessibilityModal) this.hideAccessibilityModal();
             });
         }
 
@@ -462,6 +492,8 @@ class LogoLabApp {
                     this.hideTutorials();
                 } else if (this.shareModal && !this.shareModal.classList.contains('hidden')) {
                     this.hideShareModal();
+                } else if (this.accessibilityModal && !this.accessibilityModal.classList.contains('hidden')) {
+                    this.hideAccessibilityModal();
                 } else {
                     this.stop();
                 }
@@ -596,32 +628,83 @@ class LogoLabApp {
     }
 
     showHelp() {
+        this.lastFocusedElement = document.activeElement;
         this.helpModal.classList.remove('hidden');
+        // Focus first focusable element in modal
+        const closeBtn = document.getElementById('btn-close-help');
+        if (closeBtn) closeBtn.focus();
+        this.trapFocus(this.helpModal);
     }
 
     hideHelp() {
         this.helpModal.classList.add('hidden');
+        this.removeFocusTrap();
+        // Restore focus
+        if (this.lastFocusedElement) this.lastFocusedElement.focus();
     }
 
     showExamples() {
+        this.lastFocusedElement = document.activeElement;
         this.examplesModal.classList.remove('hidden');
+        // Focus first example item
+        const firstExample = this.examplesModal.querySelector('.example-item');
+        if (firstExample) firstExample.focus();
+        this.trapFocus(this.examplesModal);
     }
 
     hideExamples() {
         this.examplesModal.classList.add('hidden');
+        this.removeFocusTrap();
+        if (this.lastFocusedElement) this.lastFocusedElement.focus();
+    }
+
+    // Focus trap for modals (accessibility)
+    trapFocus(modal) {
+        this.focusTrapHandler = (e) => {
+            if (e.key !== 'Tab') return;
+
+            const focusableElements = modal.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+
+            if (e.shiftKey && document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+            } else if (!e.shiftKey && document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        };
+        document.addEventListener('keydown', this.focusTrapHandler);
+    }
+
+    removeFocusTrap() {
+        if (this.focusTrapHandler) {
+            document.removeEventListener('keydown', this.focusTrapHandler);
+            this.focusTrapHandler = null;
+        }
     }
 
     showTutorials() {
         if (this.tutorialsModal) {
+            this.lastFocusedElement = document.activeElement;
             this.tutorialsModal.classList.remove('hidden');
             this.updateTutorialProgress();
             this.loadTutorialLesson(1);
+            // Focus first tutorial item
+            const firstItem = this.tutorialsModal.querySelector('.tutorial-item');
+            if (firstItem) firstItem.focus();
+            this.trapFocus(this.tutorialsModal);
         }
     }
 
     hideTutorials() {
         if (this.tutorialsModal) {
             this.tutorialsModal.classList.add('hidden');
+            this.removeFocusTrap();
+            if (this.lastFocusedElement) this.lastFocusedElement.focus();
         }
     }
 
@@ -678,16 +761,44 @@ class LogoLabApp {
 
     showShareModal() {
         if (this.shareModal) {
+            this.lastFocusedElement = document.activeElement;
             const code = this.editor.getValue();
             const shareUrl = this.generateShareUrl(code);
             document.getElementById('share-url').value = shareUrl;
             this.shareModal.classList.remove('hidden');
+            // Focus the URL input for easy copying
+            const urlInput = document.getElementById('share-url');
+            if (urlInput) {
+                urlInput.focus();
+                urlInput.select();
+            }
+            this.trapFocus(this.shareModal);
         }
     }
 
     hideShareModal() {
         if (this.shareModal) {
             this.shareModal.classList.add('hidden');
+            this.removeFocusTrap();
+            if (this.lastFocusedElement) this.lastFocusedElement.focus();
+        }
+    }
+
+    showAccessibilityModal() {
+        if (this.accessibilityModal) {
+            this.lastFocusedElement = document.activeElement;
+            this.accessibilityModal.classList.remove('hidden');
+            const closeBtn = document.getElementById('btn-close-accessibility');
+            if (closeBtn) closeBtn.focus();
+            this.trapFocus(this.accessibilityModal);
+        }
+    }
+
+    hideAccessibilityModal() {
+        if (this.accessibilityModal) {
+            this.accessibilityModal.classList.add('hidden');
+            this.removeFocusTrap();
+            if (this.lastFocusedElement) this.lastFocusedElement.focus();
         }
     }
 
