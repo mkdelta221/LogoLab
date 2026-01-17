@@ -188,7 +188,125 @@ END
 PU SETPOS [-150 -100] PD
 SETPC "purple
 SIERPINSKI 300 4
-HT`
+HT`,
+
+    chase: `; Chase the target using TOWARDS and DISTANCE
+; The turtle chases a moving target point
+
+TO CHASE :targetX :targetY :steps
+  IF :steps = 0 [STOP]
+
+  ; Turn towards the target
+  SETH TOWARDS LIST :targetX :targetY
+
+  ; Move forward (but not past the target)
+  MAKE "dist DISTANCE LIST :targetX :targetY
+  FD MIN :dist 10
+
+  ; Recurse with fewer steps
+  CHASE :targetX :targetY :steps - 1
+END
+
+; Draw a target marker
+SETPC "red
+PU SETPOS [120 80] PD
+FILLED [CIRCLE 8]
+
+; Start from bottom-left and chase the target
+PU SETPOS [-150 -100] PD
+SETPC "blue
+CHASE 120 80 50
+
+PRINT "Caught\ the\ target!`,
+
+    interactive: `; Interactive Art - Ask for user input!
+; Uses READWORD for personalized art
+
+MAKE "name READWORD "What\ is\ your\ name?
+MAKE "color READWORD "Pick\ a\ color\ (red,\ blue,\ green):
+
+; Draw a personalized message
+SETPC :color
+PRINT WORD "Hello\  :name
+PRINT WORD "Drawing\ in\  UPPERCASE :color
+
+; Create a pattern based on name length
+MAKE "size COUNT :name
+MAKE "size :size * 15
+
+REPEAT 8 [
+  REPEAT 4 [FD :size RT 90]
+  RT 45
+]
+
+PRINT WORD "Made\ with\ love\ for\  :name`,
+
+    randomart: `; Random Color Art Generator
+; Uses RANDOM for unique patterns every time
+
+TO RANDOMCOLOR
+  ; Pick a random color from a list
+  MAKE "colors [red blue green orange purple cyan magenta yellow]
+  MAKE "pick RANDOM COUNT :colors
+  MAKE "pick :pick + 1
+  OUTPUT ITEM :pick :colors
+END
+
+TO BURST :size
+  SETPC RANDOMCOLOR
+  REPEAT 36 [
+    FD :size
+    BK :size
+    RT 10
+  ]
+END
+
+; Create multiple random bursts
+REPEAT 5 [
+  PU
+  SETPOS LIST (RANDOM 300) - 150 (RANDOM 200) - 100
+  PD
+  BURST 20 + RANDOM 40
+]
+
+PRINT "Every\ run\ is\ unique!
+HT`,
+
+    mirror: `; Mirror Text - Shows REVERSE in action
+; Demonstrates string manipulation
+
+MAKE "word READWORD "Enter\ a\ word\ to\ mirror:
+
+PRINT WORD "Original:\  :word
+PRINT WORD "Reversed:\  REVERSE :word
+
+; Check if palindrome
+IF :word = REVERSE :word [
+  PRINT "It's\ a\ palindrome!
+  SETPC "green
+] [
+  PRINT "Not\ a\ palindrome
+  SETPC "blue
+]
+
+; Draw the word artistically
+MAKE "len COUNT :word
+MAKE "angle 360 / :len
+
+REPEAT :len [
+  FD 80
+  BK 80
+  RT :angle
+]
+
+; Draw a mirrored version
+SETPC "red
+LT 180
+REPEAT :len [
+  FD 60
+  BK 60
+  LT :angle
+]`
 };
 
 class LogoLabApp {
