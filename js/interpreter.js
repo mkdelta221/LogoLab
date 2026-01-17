@@ -246,11 +246,21 @@ class LogoInterpreter {
                 continue;
             }
 
-            // Quoted word ("word)
+            // Quoted word ("word) - supports escaped spaces with backslash
             if (code[i] === '"') {
                 i++;
                 let word = '';
-                while (i < code.length && /[a-zA-Z0-9_.]/.test(code[i])) {
+                while (i < code.length) {
+                    // Handle escaped space (\ followed by space)
+                    if (code[i] === '\\' && i + 1 < code.length && code[i + 1] === ' ') {
+                        word += ' ';
+                        i += 2;
+                        continue;
+                    }
+                    // Stop at unescaped whitespace or special characters
+                    if (/\s/.test(code[i]) || /[\[\]\(\);]/.test(code[i])) {
+                        break;
+                    }
                     word += code[i];
                     i++;
                 }

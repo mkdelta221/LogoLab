@@ -223,7 +223,7 @@ PRINT "Caught\ the\ target!`,
 ; Uses READWORD for personalized art
 
 MAKE "name READWORD "What\ is\ your\ name?
-MAKE "color READWORD "Pick\ a\ color\ (red,\ blue,\ green):
+MAKE "color READWORD "Pick\ a\ color:
 
 ; Draw a personalized message
 SETPC :color
@@ -239,7 +239,7 @@ REPEAT 8 [
   RT 45
 ]
 
-PRINT WORD "Made\ with\ love\ for\  :name`,
+PRINT WORD "Made\ for\  :name`,
 
     randomart: `; Random Color Art Generator
 ; Uses RANDOM for unique patterns every time
@@ -275,7 +275,7 @@ HT`,
     mirror: `; Mirror Text - Shows REVERSE in action
 ; Demonstrates string manipulation
 
-MAKE "word READWORD "Enter\ a\ word\ to\ mirror:
+MAKE "word READWORD "Enter\ a\ word:
 
 PRINT WORD "Original:\  :word
 PRINT WORD "Reversed:\  REVERSE :word
