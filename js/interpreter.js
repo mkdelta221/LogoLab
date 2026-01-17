@@ -62,12 +62,22 @@ class LogoInterpreter {
             'REPEAT', 'IF', 'IFELSE', 'FOR', 'WHILE', 'STOP', 'OUTPUT', 'OP', 'WAIT',
             'MAKE', 'LOCAL', 'PRINT', 'SHOW', 'TYPE', 'TELL', 'ASK',
             'TO', 'END',
+            // Math functions
             'SQRT', 'SIN', 'COS', 'TAN', 'ARCTAN', 'ABS', 'INT', 'ROUND', 'RANDOM',
-            'POWER', 'REMAINDER', 'MODULO',
+            'POWER', 'REMAINDER', 'MODULO', 'EXP', 'LOG', 'LOG10', 'LN', 'SIGN', 'MIN', 'MAX',
+            // List functions
             'FIRST', 'LAST', 'BUTFIRST', 'BF', 'BUTLAST', 'BL', 'COUNT', 'ITEM',
-            'LIST', 'SENTENCE', 'SE', 'FPUT', 'LPUT',
+            'LIST', 'SENTENCE', 'SE', 'FPUT', 'LPUT', 'REVERSE',
+            // Logic
             'AND', 'OR', 'NOT', 'TRUE', 'FALSE',
-            'XCOR', 'YCOR', 'HEADING', 'POS', 'PENSIZE', 'PENCOLOR', 'PC', 'WHO', 'TURTLES'
+            // Turtle state
+            'XCOR', 'YCOR', 'HEADING', 'POS', 'PENSIZE', 'PENCOLOR', 'PC', 'WHO', 'TURTLES',
+            // String functions
+            'WORD', 'CHAR', 'ASCII', 'UPPERCASE', 'LOWERCASE',
+            // Geometry functions
+            'TOWARDS', 'DISTANCE',
+            // User input
+            'READWORD', 'READLIST'
         ];
     }
 
@@ -470,8 +480,12 @@ class LogoInterpreter {
             'REMAINDER': null, // Two args
             'MODULO': null, // Two args
             'EXP': (a) => Math.exp(a),
+            'LOG': (a) => Math.log(a),
             'LOG10': (a) => Math.log10(a),
-            'LN': (a) => Math.log(a)
+            'LN': (a) => Math.log(a),
+            'SIGN': (a) => Math.sign(a),
+            'MIN': null, // Variable args
+            'MAX': null  // Variable args
         };
 
         if (funcName in mathFuncs) {
@@ -487,6 +501,15 @@ class LogoInterpreter {
                     throw new Error("Oops! You can't divide by zero.");
                 }
                 return { value: arg1.value % arg2.value, index: arg2.index };
+            }
+            if (funcName === 'MIN' || funcName === 'MAX') {
+                // MIN and MAX take two arguments
+                const arg1 = this.evaluateExpression(tokens, index);
+                const arg2 = this.evaluateExpression(tokens, arg1.index);
+                const result = funcName === 'MIN'
+                    ? Math.min(arg1.value, arg2.value)
+                    : Math.max(arg1.value, arg2.value);
+                return { value: result, index: arg2.index };
             }
             const arg = this.evaluateExpression(tokens, index);
             return { value: mathFuncs[funcName](arg.value), index: arg.index };
@@ -516,6 +539,61 @@ class LogoInterpreter {
         }
         if (funcName === 'TURTLES') {
             return { value: this.turtle.getTurtleIds(), index };
+        }
+
+        // String functions
+        if (funcName === 'WORD') {
+            // WORD combines two words into one
+            const arg1 = this.evaluateExpression(tokens, index);
+            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            return { value: String(arg1.value) + String(arg2.value), index: arg2.index };
+        }
+        if (funcName === 'CHAR') {
+            // CHAR returns character for ASCII code
+            const arg = this.evaluateExpression(tokens, index);
+            return { value: String.fromCharCode(arg.value), index: arg.index };
+        }
+        if (funcName === 'ASCII') {
+            // ASCII returns code for first character
+            const arg = this.evaluateExpression(tokens, index);
+            const str = String(arg.value);
+            if (str.length === 0) {
+                throw new Error("ASCII needs a word with at least one character!");
+            }
+            return { value: str.charCodeAt(0), index: arg.index };
+        }
+        if (funcName === 'UPPERCASE') {
+            const arg = this.evaluateExpression(tokens, index);
+            return { value: String(arg.value).toUpperCase(), index: arg.index };
+        }
+        if (funcName === 'LOWERCASE') {
+            const arg = this.evaluateExpression(tokens, index);
+            return { value: String(arg.value).toLowerCase(), index: arg.index };
+        }
+
+        // Geometry functions
+        if (funcName === 'TOWARDS') {
+            // Returns angle from turtle to point
+            const arg = this.evaluateExpression(tokens, index);
+            if (!Array.isArray(arg.value) || arg.value.length < 2) {
+                throw new Error("TOWARDS needs a point like [x y]");
+            }
+            const dx = arg.value[0] - this.turtle.x;
+            const dy = arg.value[1] - this.turtle.y;
+            // Calculate angle in Logo's coordinate system (0 = up, 90 = right)
+            let angle = Math.atan2(dx, dy) * 180 / Math.PI;
+            if (angle < 0) angle += 360;
+            return { value: angle, index: arg.index };
+        }
+        if (funcName === 'DISTANCE') {
+            // Returns distance from turtle to point
+            const arg = this.evaluateExpression(tokens, index);
+            if (!Array.isArray(arg.value) || arg.value.length < 2) {
+                throw new Error("DISTANCE needs a point like [x y]");
+            }
+            const dx = arg.value[0] - this.turtle.x;
+            const dy = arg.value[1] - this.turtle.y;
+            return { value: Math.sqrt(dx * dx + dy * dy), index: arg.index };
         }
 
         // List functions
@@ -686,6 +764,16 @@ class LogoInterpreter {
             }
             return { value: false, index: list.index };
         }
+        if (funcName === 'REVERSE') {
+            const arg = this.evaluateExpression(tokens, index);
+            if (Array.isArray(arg.value)) {
+                return { value: [...arg.value].reverse(), index: arg.index };
+            }
+            if (typeof arg.value === 'string') {
+                return { value: arg.value.split('').reverse().join(''), index: arg.index };
+            }
+            throw new Error("REVERSE needs a list like [1 2 3] or a word");
+        }
 
         // Logic functions
         if (funcName === 'AND') {
@@ -701,6 +789,33 @@ class LogoInterpreter {
         if (funcName === 'NOT') {
             const arg = this.evaluateExpression(tokens, index);
             return { value: !this.isTruthy(arg.value), index: arg.index };
+        }
+
+        // User input functions
+        if (funcName === 'READWORD') {
+            // Get optional prompt from string argument
+            let prompt = 'Enter a word:';
+            if (index < tokens.length && tokens[index].type === 'QUOTED') {
+                prompt = tokens[index].value;
+                index++;
+            }
+            const input = window.prompt(prompt) || '';
+            return { value: input, index };
+        }
+        if (funcName === 'READLIST') {
+            // Get optional prompt from string argument
+            let prompt = 'Enter values (space-separated):';
+            if (index < tokens.length && tokens[index].type === 'QUOTED') {
+                prompt = tokens[index].value;
+                index++;
+            }
+            const input = window.prompt(prompt) || '';
+            // Parse into list
+            const list = input.split(/\s+/).filter(s => s.length > 0).map(s => {
+                const num = parseFloat(s);
+                return isNaN(num) ? s : num;
+            });
+            return { value: list, index };
         }
 
         // THING - get variable value

@@ -93,10 +93,13 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                     <span>Canvas</span>
                     <div class="panel-actions">
                         <span id="coordinates" class="coordinates">X: 0, Y: 0</span>
-                        <button id="btn-download" class="btn-small" title="Download Image">📷</button>
-                        <button id="btn-zoom-in" class="btn-small" title="Zoom In">+</button>
-                        <button id="btn-zoom-out" class="btn-small" title="Zoom Out">-</button>
-                        <button id="btn-reset-view" class="btn-small" title="Reset View">⌂</button>
+                        <button id="btn-undo" class="btn-small" title="Undo (Ctrl+Z)" aria-label="Undo last action">↶</button>
+                        <button id="btn-redo" class="btn-small" title="Redo (Ctrl+Y)" aria-label="Redo last action">↷</button>
+                        <button id="btn-grid" class="btn-small" title="Toggle Grid" aria-label="Toggle coordinate grid">⊞</button>
+                        <button id="btn-download" class="btn-small" title="Download Image" aria-label="Download canvas as image">📷</button>
+                        <button id="btn-zoom-in" class="btn-small" title="Zoom In" aria-label="Zoom in">+</button>
+                        <button id="btn-zoom-out" class="btn-small" title="Zoom Out" aria-label="Zoom out">−</button>
+                        <button id="btn-reset-view" class="btn-small" title="Reset View" aria-label="Reset view">⌂</button>
                     </div>
                 </div>
                 <div id="canvas-container">
@@ -169,6 +172,8 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                                 <tr><td><code>YCOR</code></td><td>Returns current Y coordinate</td></tr>
                                 <tr><td><code>HEADING</code></td><td>Returns current heading</td></tr>
                                 <tr><td><code>POS</code></td><td>Returns current position [x y]</td></tr>
+                                <tr><td><code>TOWARDS [x y]</code></td><td>Returns angle from turtle to point</td></tr>
+                                <tr><td><code>DISTANCE [x y]</code></td><td>Returns distance from turtle to point</td></tr>
                             </table>
                         </div>
                         <div id="help-pen" class="help-section">
@@ -258,6 +263,12 @@ PRINT DOUBLE 5  ; prints 10</pre>
                                 <tr><td><code>INT n</code></td><td>Integer part</td></tr>
                                 <tr><td><code>ROUND n</code></td><td>Round to nearest integer</td></tr>
                                 <tr><td><code>RANDOM n</code></td><td>Random integer 0 to n-1</td></tr>
+                                <tr><td><code>MIN a b</code></td><td>Smaller of two numbers</td></tr>
+                                <tr><td><code>MAX a b</code></td><td>Larger of two numbers</td></tr>
+                                <tr><td><code>SIGN n</code></td><td>Returns -1, 0, or 1</td></tr>
+                                <tr><td><code>EXP n</code></td><td>e raised to power n</td></tr>
+                                <tr><td><code>LOG n</code> / <code>LN n</code></td><td>Natural logarithm</td></tr>
+                                <tr><td><code>LOG10 n</code></td><td>Base-10 logarithm</td></tr>
                             </table>
                             <h4>Trigonometry</h4>
                             <table>
@@ -279,6 +290,19 @@ PRINT DOUBLE 5  ; prints 10</pre>
                                 <tr><td><code>SHOW value</code></td><td>Print with brackets for lists</td></tr>
                                 <tr><td><code>TYPE value</code></td><td>Print without newline</td></tr>
                             </table>
+                            <h4>Strings</h4>
+                            <table>
+                                <tr><td><code>WORD a b</code></td><td>Combine two words into one</td></tr>
+                                <tr><td><code>CHAR n</code></td><td>Character for ASCII code n</td></tr>
+                                <tr><td><code>ASCII word</code></td><td>ASCII code for first character</td></tr>
+                                <tr><td><code>UPPERCASE word</code></td><td>Convert to uppercase</td></tr>
+                                <tr><td><code>LOWERCASE word</code></td><td>Convert to lowercase</td></tr>
+                            </table>
+                            <h4>User Input</h4>
+                            <table>
+                                <tr><td><code>READWORD</code></td><td>Prompt user for a word</td></tr>
+                                <tr><td><code>READLIST</code></td><td>Prompt user for a list</td></tr>
+                            </table>
                         </div>
                         <div id="help-lists" class="help-section">
                             <h3>Lists</h3>
@@ -298,6 +322,7 @@ PRINT DOUBLE 5  ; prints 10</pre>
                                 <tr><td><code>BUTLAST list</code> / <code>BL list</code></td><td>All but last</td></tr>
                                 <tr><td><code>ITEM n list</code></td><td>Get nth item (1-indexed)</td></tr>
                                 <tr><td><code>COUNT list</code></td><td>Number of items</td></tr>
+                                <tr><td><code>REVERSE list</code></td><td>Reverse list or word</td></tr>
                             </table>
                             <h4>Testing Lists</h4>
                             <table>

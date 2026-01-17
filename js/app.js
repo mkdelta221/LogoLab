@@ -216,6 +216,9 @@ class LogoLabApp {
         this.btnResetView = document.getElementById('btn-reset-view');
         this.btnDownload = document.getElementById('btn-download');
         this.btnShare = document.getElementById('btn-share');
+        this.btnUndo = document.getElementById('btn-undo');
+        this.btnRedo = document.getElementById('btn-redo');
+        this.btnGrid = document.getElementById('btn-grid');
         this.btnLearn = document.getElementById('btn-learn');
         this.btnTheme = document.getElementById('btn-theme');
         this.btnToggleVars = document.getElementById('btn-toggle-vars');
@@ -355,6 +358,21 @@ class LogoLabApp {
             this.btnDownload.addEventListener('click', () => this.downloadImage());
         }
 
+        // Grid toggle button
+        if (this.btnGrid) {
+            this.btnGrid.addEventListener('click', () => this.toggleGrid());
+        }
+
+        // Undo button
+        if (this.btnUndo) {
+            this.btnUndo.addEventListener('click', () => this.undo());
+        }
+
+        // Redo button
+        if (this.btnRedo) {
+            this.btnRedo.addEventListener('click', () => this.redo());
+        }
+
         // Share button
         if (this.btnShare) {
             this.btnShare.addEventListener('click', () => this.showShareModal());
@@ -482,6 +500,22 @@ class LogoLabApp {
                 e.preventDefault();
                 this.showHelp();
             }
+            // Ctrl+Z to undo
+            if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+                // Only handle undo if not in text editor
+                if (document.activeElement !== this.codeEditor) {
+                    e.preventDefault();
+                    this.undo();
+                }
+            }
+            // Ctrl+Y to redo
+            if (e.ctrlKey && e.key === 'y') {
+                // Only handle redo if not in text editor
+                if (document.activeElement !== this.codeEditor) {
+                    e.preventDefault();
+                    this.redo();
+                }
+            }
             // Escape to stop or close modals
             if (e.key === 'Escape') {
                 if (!this.helpModal.classList.contains('hidden')) {
@@ -569,6 +603,10 @@ class LogoLabApp {
             this.appendOutput('No code to run\n', true);
             return;
         }
+
+        // Save state for undo before running
+        this.turtle.saveState();
+        this.updateUndoRedoButtons();
 
         this.btnRun.disabled = true;
         this.btnStop.disabled = false;
@@ -849,6 +887,34 @@ class LogoLabApp {
     downloadImage() {
         this.turtle.downloadImage('logolab-drawing');
         this.appendOutput('Image downloaded!\n', false, 'info');
+    }
+
+    toggleGrid() {
+        const isOn = this.turtle.toggleGrid();
+        if (this.btnGrid) {
+            this.btnGrid.classList.toggle('active', isOn);
+        }
+    }
+
+    undo() {
+        if (this.turtle.undo()) {
+            this.updateUndoRedoButtons();
+        }
+    }
+
+    redo() {
+        if (this.turtle.redo()) {
+            this.updateUndoRedoButtons();
+        }
+    }
+
+    updateUndoRedoButtons() {
+        if (this.btnUndo) {
+            this.btnUndo.disabled = !this.turtle.canUndo();
+        }
+        if (this.btnRedo) {
+            this.btnRedo.disabled = !this.turtle.canRedo();
+        }
     }
 
     toggleTheme() {

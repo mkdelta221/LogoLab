@@ -127,6 +127,15 @@ body {
     background: var(--border-color);
 }
 
+.btn-small.active {
+    background: var(--accent-primary);
+    color: #1e1e2e;
+}
+
+.btn-small.active:hover {
+    background: var(--accent-secondary);
+}
+
 .icon {
     font-size: 0.9rem;
 }

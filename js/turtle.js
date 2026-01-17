@@ -32,6 +32,15 @@ class TurtleGraphics {
         this.fillStartY = 0;
         this.fillColor = '#000000';
 
+        // Grid overlay
+        this.showGrid = false;
+        this.gridSize = 50;
+
+        // Undo/Redo system
+        this.undoStack = [];
+        this.redoStack = [];
+        this.maxHistory = 50;
+
         // Animation
         this.animationFrame = null;
 
@@ -543,6 +552,9 @@ class TurtleGraphics {
     redraw() {
         this.clear();
 
+        // Draw grid overlay first (behind everything)
+        this.drawGrid();
+
         // Redraw all commands
         for (const cmd of this.commands) {
             this.executeCommand(cmd);
@@ -609,6 +621,8 @@ class TurtleGraphics {
         this.panY = 0;
         this.backgroundColor = '#ffffff';
         this.mode = 'wrap';
+        this.undoStack = [];
+        this.redoStack = [];
         this.redraw();
     }
 
@@ -618,6 +632,155 @@ class TurtleGraphics {
             x: Math.round(this.toLogoX(canvasX)),
             y: Math.round(this.toLogoY(canvasY))
         };
+    }
+
+    // Grid overlay methods
+    toggleGrid() {
+        this.showGrid = !this.showGrid;
+        this.redraw();
+        return this.showGrid;
+    }
+
+    drawGrid() {
+        if (!this.showGrid) return;
+
+        const ctx = this.ctx;
+        ctx.save();
+
+        // Calculate visible range in Logo coordinates
+        const halfWidth = this.canvas.width / (2 * this.zoom);
+        const halfHeight = this.canvas.height / (2 * this.zoom);
+
+        // Draw minor grid lines
+        ctx.strokeStyle = 'rgba(128, 128, 128, 0.3)';
+        ctx.lineWidth = 1;
+
+        // Vertical lines
+        const startX = Math.floor(-halfWidth / this.gridSize) * this.gridSize;
+        const endX = Math.ceil(halfWidth / this.gridSize) * this.gridSize;
+        for (let x = startX; x <= endX; x += this.gridSize) {
+            if (x === 0) continue; // Skip axis line
+            ctx.beginPath();
+            ctx.moveTo(this.toCanvasX(x), 0);
+            ctx.lineTo(this.toCanvasX(x), this.canvas.height);
+            ctx.stroke();
+        }
+
+        // Horizontal lines
+        const startY = Math.floor(-halfHeight / this.gridSize) * this.gridSize;
+        const endY = Math.ceil(halfHeight / this.gridSize) * this.gridSize;
+        for (let y = startY; y <= endY; y += this.gridSize) {
+            if (y === 0) continue; // Skip axis line
+            ctx.beginPath();
+            ctx.moveTo(0, this.toCanvasY(y));
+            ctx.lineTo(this.canvas.width, this.toCanvasY(y));
+            ctx.stroke();
+        }
+
+        // Draw axis lines (darker and thicker)
+        ctx.strokeStyle = 'rgba(128, 128, 128, 0.6)';
+        ctx.lineWidth = 2;
+
+        // X axis
+        ctx.beginPath();
+        ctx.moveTo(0, this.toCanvasY(0));
+        ctx.lineTo(this.canvas.width, this.toCanvasY(0));
+        ctx.stroke();
+
+        // Y axis
+        ctx.beginPath();
+        ctx.moveTo(this.toCanvasX(0), 0);
+        ctx.lineTo(this.toCanvasX(0), this.canvas.height);
+        ctx.stroke();
+
+        // Draw axis labels
+        ctx.fillStyle = 'rgba(128, 128, 128, 0.8)';
+        ctx.font = '10px monospace';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+
+        // X axis labels
+        for (let x = startX; x <= endX; x += this.gridSize) {
+            if (x === 0) continue;
+            const canvasX = this.toCanvasX(x);
+            const canvasY = this.toCanvasY(0);
+            if (canvasY > 10 && canvasY < this.canvas.height - 10) {
+                ctx.fillText(String(x), canvasX, canvasY + 3);
+            }
+        }
+
+        // Y axis labels
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        for (let y = startY; y <= endY; y += this.gridSize) {
+            if (y === 0) continue;
+            const canvasX = this.toCanvasX(0);
+            const canvasY = this.toCanvasY(y);
+            if (canvasX > 0 && canvasX < this.canvas.width - 30) {
+                ctx.fillText(String(y), canvasX + 5, canvasY);
+            }
+        }
+
+        ctx.restore();
+    }
+
+    // Undo/Redo methods
+    saveState() {
+        if (this.undoStack.length >= this.maxHistory) {
+            this.undoStack.shift();
+        }
+        this.undoStack.push({
+            commands: JSON.parse(JSON.stringify(this.commands)),
+            turtles: JSON.parse(JSON.stringify(this.turtles)),
+            currentTurtleId: this.currentTurtleId
+        });
+        this.redoStack = [];
+    }
+
+    undo() {
+        if (this.undoStack.length === 0) return false;
+
+        // Save current state to redo stack
+        this.redoStack.push({
+            commands: JSON.parse(JSON.stringify(this.commands)),
+            turtles: JSON.parse(JSON.stringify(this.turtles)),
+            currentTurtleId: this.currentTurtleId
+        });
+
+        // Restore previous state
+        const state = this.undoStack.pop();
+        this.commands = state.commands;
+        this.turtles = state.turtles;
+        this.currentTurtleId = state.currentTurtleId;
+        this.redraw();
+        return true;
+    }
+
+    redo() {
+        if (this.redoStack.length === 0) return false;
+
+        // Save current state to undo stack
+        this.undoStack.push({
+            commands: JSON.parse(JSON.stringify(this.commands)),
+            turtles: JSON.parse(JSON.stringify(this.turtles)),
+            currentTurtleId: this.currentTurtleId
+        });
+
+        // Restore redo state
+        const state = this.redoStack.pop();
+        this.commands = state.commands;
+        this.turtles = state.turtles;
+        this.currentTurtleId = state.currentTurtleId;
+        this.redraw();
+        return true;
+    }
+
+    canUndo() {
+        return this.undoStack.length > 0;
+    }
+
+    canRedo() {
+        return this.redoStack.length > 0;
     }
 
     // Export canvas as image
