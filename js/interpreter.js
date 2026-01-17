@@ -353,12 +353,12 @@ class LogoInterpreter {
 
     // ============== EXPRESSION EVALUATOR ==============
 
-    evaluateExpression(tokens, index) {
+    async evaluateExpression(tokens, index) {
         return this.parseAddSub(tokens, index);
     }
 
-    parseAddSub(tokens, index) {
-        let result = this.parseMulDiv(tokens, index);
+    async parseAddSub(tokens, index) {
+        let result = await this.parseMulDiv(tokens, index);
         let i = result.index;
         let value = result.value;
 
@@ -366,7 +366,7 @@ class LogoInterpreter {
             const token = tokens[i];
             if (token.type === 'OPERATOR' && (token.value === '+' || token.value === '-')) {
                 i++;
-                const right = this.parseMulDiv(tokens, i);
+                const right = await this.parseMulDiv(tokens, i);
                 i = right.index;
                 if (token.value === '+') {
                     value = value + right.value;
@@ -381,8 +381,8 @@ class LogoInterpreter {
         return { value, index: i };
     }
 
-    parseMulDiv(tokens, index) {
-        let result = this.parseUnary(tokens, index);
+    async parseMulDiv(tokens, index) {
+        let result = await this.parseUnary(tokens, index);
         let i = result.index;
         let value = result.value;
 
@@ -390,7 +390,7 @@ class LogoInterpreter {
             const token = tokens[i];
             if (token.type === 'OPERATOR' && (token.value === '*' || token.value === '/')) {
                 i++;
-                const right = this.parseUnary(tokens, i);
+                const right = await this.parseUnary(tokens, i);
                 i = right.index;
                 if (token.value === '*') {
                     value = value * right.value;
@@ -408,7 +408,7 @@ class LogoInterpreter {
         return { value, index: i };
     }
 
-    parseUnary(tokens, index) {
+    async parseUnary(tokens, index) {
         if (index >= tokens.length) {
             throw new Error("I ran out of things to read! Did you forget to finish your code?");
         }
@@ -416,14 +416,14 @@ class LogoInterpreter {
         const token = tokens[index];
 
         if (token.type === 'OPERATOR' && token.value === '-') {
-            const result = this.parseUnary(tokens, index + 1);
+            const result = await this.parseUnary(tokens, index + 1);
             return { value: -result.value, index: result.index };
         }
 
         return this.parsePrimary(tokens, index);
     }
 
-    parsePrimary(tokens, index) {
+    async parsePrimary(tokens, index) {
         if (index >= tokens.length) {
             throw new Error("I ran out of things to read! Did you forget to finish your code?");
         }
@@ -432,7 +432,7 @@ class LogoInterpreter {
 
         // Parenthesized expression
         if (token.type === 'LPAREN') {
-            const result = this.parseAddSub(tokens, index + 1);
+            const result = await this.parseAddSub(tokens, index + 1);
             if (result.index >= tokens.length || tokens[result.index].type !== 'RPAREN') {
                 throw new Error("You opened ( but forgot to close it with )");
             }
@@ -465,13 +465,13 @@ class LogoInterpreter {
 
         // Function call or word
         if (token.type === 'WORD') {
-            return this.evaluateFunction(tokens, index);
+            return await this.evaluateFunction(tokens, index);
         }
 
         throw new Error(`I don't understand "${token.value}" here. Check your code!`);
     }
 
-    evaluateFunction(tokens, index) {
+    async evaluateFunction(tokens, index) {
         const funcName = tokens[index].value;
         index++;
 
@@ -500,13 +500,13 @@ class LogoInterpreter {
 
         if (funcName in mathFuncs) {
             if (funcName === 'POWER') {
-                const arg1 = this.evaluateExpression(tokens, index);
-                const arg2 = this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.evaluateExpression(tokens, index);
+                const arg2 = await this.evaluateExpression(tokens, arg1.index);
                 return { value: Math.pow(arg1.value, arg2.value), index: arg2.index };
             }
             if (funcName === 'REMAINDER' || funcName === 'MODULO') {
-                const arg1 = this.evaluateExpression(tokens, index);
-                const arg2 = this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.evaluateExpression(tokens, index);
+                const arg2 = await this.evaluateExpression(tokens, arg1.index);
                 if (arg2.value === 0) {
                     throw new Error("Oops! You can't divide by zero.");
                 }
@@ -514,14 +514,14 @@ class LogoInterpreter {
             }
             if (funcName === 'MIN' || funcName === 'MAX') {
                 // MIN and MAX take two arguments
-                const arg1 = this.evaluateExpression(tokens, index);
-                const arg2 = this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.evaluateExpression(tokens, index);
+                const arg2 = await this.evaluateExpression(tokens, arg1.index);
                 const result = funcName === 'MIN'
                     ? Math.min(arg1.value, arg2.value)
                     : Math.max(arg1.value, arg2.value);
                 return { value: result, index: arg2.index };
             }
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: mathFuncs[funcName](arg.value), index: arg.index };
         }
 
@@ -554,18 +554,18 @@ class LogoInterpreter {
         // String functions
         if (funcName === 'WORD') {
             // WORD combines two words into one
-            const arg1 = this.evaluateExpression(tokens, index);
-            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.evaluateExpression(tokens, index);
+            const arg2 = await this.evaluateExpression(tokens, arg1.index);
             return { value: String(arg1.value) + String(arg2.value), index: arg2.index };
         }
         if (funcName === 'CHAR') {
             // CHAR returns character for ASCII code
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: String.fromCharCode(arg.value), index: arg.index };
         }
         if (funcName === 'ASCII') {
             // ASCII returns code for first character
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const str = String(arg.value);
             if (str.length === 0) {
                 throw new Error("ASCII needs a word with at least one character!");
@@ -573,18 +573,18 @@ class LogoInterpreter {
             return { value: str.charCodeAt(0), index: arg.index };
         }
         if (funcName === 'UPPERCASE') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: String(arg.value).toUpperCase(), index: arg.index };
         }
         if (funcName === 'LOWERCASE') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: String(arg.value).toLowerCase(), index: arg.index };
         }
 
         // Geometry functions
         if (funcName === 'TOWARDS') {
             // Returns angle from turtle to point
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             if (!Array.isArray(arg.value) || arg.value.length < 2) {
                 throw new Error("TOWARDS needs a point like [x y]");
             }
@@ -597,7 +597,7 @@ class LogoInterpreter {
         }
         if (funcName === 'DISTANCE') {
             // Returns distance from turtle to point
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             if (!Array.isArray(arg.value) || arg.value.length < 2) {
                 throw new Error("DISTANCE needs a point like [x y]");
             }
@@ -608,7 +608,7 @@ class LogoInterpreter {
 
         // List functions
         if (funcName === 'FIRST') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 if (list.length === 0) {
@@ -625,7 +625,7 @@ class LogoInterpreter {
             throw new Error('FIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'LAST') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 if (list.length === 0) {
@@ -642,7 +642,7 @@ class LogoInterpreter {
             throw new Error('LAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTFIRST' || funcName === 'BF') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.slice(1), index: arg.index };
@@ -653,7 +653,7 @@ class LogoInterpreter {
             throw new Error('BUTFIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTLAST' || funcName === 'BL') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.slice(0, -1), index: arg.index };
@@ -664,7 +664,7 @@ class LogoInterpreter {
             throw new Error('BUTLAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'COUNT') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.length, index: arg.index };
@@ -675,8 +675,8 @@ class LogoInterpreter {
             throw new Error('COUNT needs a list like [1 2 3] or a word');
         }
         if (funcName === 'ITEM') {
-            const idx = this.evaluateExpression(tokens, index);
-            const list = this.evaluateExpression(tokens, idx.index);
+            const idx = await this.evaluateExpression(tokens, index);
+            const list = await this.evaluateExpression(tokens, idx.index);
             const itemIndex = idx.value;
             if (Array.isArray(list.value)) {
                 if (list.value.length === 0) {
@@ -701,15 +701,15 @@ class LogoInterpreter {
         if (funcName === 'LIST') {
             const items = [];
             // Collect two items
-            const arg1 = this.evaluateExpression(tokens, index);
+            const arg1 = await this.evaluateExpression(tokens, index);
             items.push(arg1.value);
-            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            const arg2 = await this.evaluateExpression(tokens, arg1.index);
             items.push(arg2.value);
             return { value: items, index: arg2.index };
         }
         if (funcName === 'SENTENCE' || funcName === 'SE') {
-            const arg1 = this.evaluateExpression(tokens, index);
-            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.evaluateExpression(tokens, index);
+            const arg2 = await this.evaluateExpression(tokens, arg1.index);
             const result = [];
             if (Array.isArray(arg1.value)) {
                 result.push(...arg1.value);
@@ -724,16 +724,16 @@ class LogoInterpreter {
             return { value: result, index: arg2.index };
         }
         if (funcName === 'FPUT') {
-            const item = this.evaluateExpression(tokens, index);
-            const list = this.evaluateExpression(tokens, item.index);
+            const item = await this.evaluateExpression(tokens, index);
+            const list = await this.evaluateExpression(tokens, item.index);
             if (!Array.isArray(list.value)) {
                 throw new Error('FPUT needs a list: FPUT "hello [1 2 3] puts "hello at the front');
             }
             return { value: [item.value, ...list.value], index: list.index };
         }
         if (funcName === 'LPUT') {
-            const item = this.evaluateExpression(tokens, index);
-            const list = this.evaluateExpression(tokens, item.index);
+            const item = await this.evaluateExpression(tokens, index);
+            const list = await this.evaluateExpression(tokens, item.index);
             if (!Array.isArray(list.value)) {
                 throw new Error('LPUT needs a list: LPUT "hello [1 2 3] puts "hello at the end');
             }
@@ -742,7 +742,7 @@ class LogoInterpreter {
 
         // Predicates
         if (funcName === 'EMPTY?') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             if (Array.isArray(arg.value)) {
                 return { value: arg.value.length === 0, index: arg.index };
             }
@@ -752,20 +752,20 @@ class LogoInterpreter {
             return { value: false, index: arg.index };
         }
         if (funcName === 'LIST?') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: Array.isArray(arg.value), index: arg.index };
         }
         if (funcName === 'NUMBER?') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: typeof arg.value === 'number', index: arg.index };
         }
         if (funcName === 'WORD?') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: typeof arg.value === 'string', index: arg.index };
         }
         if (funcName === 'MEMBER?') {
-            const item = this.evaluateExpression(tokens, index);
-            const list = this.evaluateExpression(tokens, item.index);
+            const item = await this.evaluateExpression(tokens, index);
+            const list = await this.evaluateExpression(tokens, item.index);
             if (Array.isArray(list.value)) {
                 return { value: list.value.includes(item.value), index: list.index };
             }
@@ -775,7 +775,7 @@ class LogoInterpreter {
             return { value: false, index: list.index };
         }
         if (funcName === 'REVERSE') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             if (Array.isArray(arg.value)) {
                 return { value: [...arg.value].reverse(), index: arg.index };
             }
@@ -787,17 +787,17 @@ class LogoInterpreter {
 
         // Logic functions
         if (funcName === 'AND') {
-            const arg1 = this.evaluateExpression(tokens, index);
-            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.evaluateExpression(tokens, index);
+            const arg2 = await this.evaluateExpression(tokens, arg1.index);
             return { value: this.isTruthy(arg1.value) && this.isTruthy(arg2.value), index: arg2.index };
         }
         if (funcName === 'OR') {
-            const arg1 = this.evaluateExpression(tokens, index);
-            const arg2 = this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.evaluateExpression(tokens, index);
+            const arg2 = await this.evaluateExpression(tokens, arg1.index);
             return { value: this.isTruthy(arg1.value) || this.isTruthy(arg2.value), index: arg2.index };
         }
         if (funcName === 'NOT') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             return { value: !this.isTruthy(arg.value), index: arg.index };
         }
 
@@ -830,7 +830,7 @@ class LogoInterpreter {
 
         // THING - get variable value
         if (funcName === 'THING') {
-            const arg = this.evaluateExpression(tokens, index);
+            const arg = await this.evaluateExpression(tokens, index);
             const varName = String(arg.value).toUpperCase();
             return { value: this.getVariable(varName), index: arg.index };
         }
@@ -845,7 +845,7 @@ class LogoInterpreter {
         if (proc) {
             const args = [];
             for (let i = 0; i < proc.params.length; i++) {
-                const argResult = this.evaluateExpression(tokens, index);
+                const argResult = await this.evaluateExpression(tokens, index);
                 args.push(argResult.value);
                 index = argResult.index;
             }
@@ -858,7 +858,7 @@ class LogoInterpreter {
 
             let outputValue = null;
             try {
-                this.executeBlock(proc.body);
+                await this.executeBlock(proc.body);
             } catch (e) {
                 if (e.type === 'OUTPUT') {
                     outputValue = e.value;
@@ -986,22 +986,22 @@ class LogoInterpreter {
 
         // ===== TURTLE MOVEMENT =====
         if (command === 'FORWARD' || command === 'FD') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.forward(result.value);
             return result.index;
         }
         if (command === 'BACK' || command === 'BK') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.back(result.value);
             return result.index;
         }
         if (command === 'LEFT' || command === 'LT') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.left(result.value);
             return result.index;
         }
         if (command === 'RIGHT' || command === 'RT') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.right(result.value);
             return result.index;
         }
@@ -1010,24 +1010,24 @@ class LogoInterpreter {
             return index;
         }
         if (command === 'SETPOS') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             if (Array.isArray(result.value) && result.value.length >= 2) {
                 this.turtle.setPosition(result.value[0], result.value[1]);
             }
             return result.index;
         }
         if (command === 'SETX') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.setX(result.value);
             return result.index;
         }
         if (command === 'SETY') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.setY(result.value);
             return result.index;
         }
         if (command === 'SETHEADING' || command === 'SETH') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.setHeading(result.value);
             return result.index;
         }
@@ -1042,13 +1042,13 @@ class LogoInterpreter {
             return index;
         }
         if (command === 'SETPENCOLOR' || command === 'SETPC') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             const color = this.resolveColor(result.value);
             this.turtle.setPenColor(color);
             return result.index;
         }
         if (command === 'SETPENSIZE') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.setPenSize(result.value);
             return result.index;
         }
@@ -1061,7 +1061,7 @@ class LogoInterpreter {
             return index;
         }
         if (command === 'SETBACKGROUND' || command === 'SETBG') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             const color = this.resolveColor(result.value);
             this.turtle.setBackground(color);
             return result.index;
@@ -1069,13 +1069,13 @@ class LogoInterpreter {
 
         // ===== SHAPE COMMANDS =====
         if (command === 'CIRCLE') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.circle(result.value);
             return result.index;
         }
         if (command === 'ARC') {
-            const angleResult = this.evaluateExpression(tokens, index);
-            const radiusResult = this.evaluateExpression(tokens, angleResult.index);
+            const angleResult = await this.evaluateExpression(tokens, index);
+            const radiusResult = await this.evaluateExpression(tokens, angleResult.index);
             this.turtle.arc(angleResult.value, radiusResult.value);
             return radiusResult.index;
         }
@@ -1124,7 +1124,7 @@ class LogoInterpreter {
 
         // ===== CONTROL STRUCTURES =====
         if (command === 'REPEAT') {
-            const countResult = this.evaluateExpression(tokens, index);
+            const countResult = await this.evaluateExpression(tokens, index);
             const count = Math.floor(countResult.value);
             index = countResult.index;
 
@@ -1144,7 +1144,7 @@ class LogoInterpreter {
         }
 
         if (command === 'IF') {
-            const condResult = this.evaluateCondition(tokens, index);
+            const condResult = await this.evaluateCondition(tokens, index);
             index = condResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
@@ -1160,7 +1160,7 @@ class LogoInterpreter {
         }
 
         if (command === 'IFELSE') {
-            const condResult = this.evaluateCondition(tokens, index);
+            const condResult = await this.evaluateCondition(tokens, index);
             index = condResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
@@ -1195,11 +1195,11 @@ class LogoInterpreter {
             }
 
             const varName = controlList.list[0].value;
-            const startResult = this.evaluateExpression(controlList.list, 1);
-            const endResult = this.evaluateExpression(controlList.list, startResult.index);
+            const startResult = await this.evaluateExpression(controlList.list, 1);
+            const endResult = await this.evaluateExpression(controlList.list, startResult.index);
             let step = 1;
             if (endResult.index < controlList.list.length) {
-                const stepResult = this.evaluateExpression(controlList.list, endResult.index);
+                const stepResult = await this.evaluateExpression(controlList.list, endResult.index);
                 step = stepResult.value;
             }
 
@@ -1246,7 +1246,7 @@ class LogoInterpreter {
 
             while (!this.stopRequested) {
                 const condTokens = this.flattenListToTokens(condBlock.list);
-                const condResult = this.evaluateCondition(condTokens, 0);
+                const condResult = await this.evaluateCondition(condTokens, 0);
                 if (!this.isTruthy(condResult.value)) break;
                 await this.executeBlock(bodyBlock.list);
             }
@@ -1259,27 +1259,27 @@ class LogoInterpreter {
         }
 
         if (command === 'OUTPUT' || command === 'OP') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             throw { type: 'OUTPUT', value: result.value };
         }
 
         if (command === 'WAIT') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             await this.delay(result.value);
             return result.index;
         }
 
         // ===== VARIABLES =====
         if (command === 'MAKE') {
-            const nameResult = this.evaluateExpression(tokens, index);
-            const valueResult = this.evaluateExpression(tokens, nameResult.index);
+            const nameResult = await this.evaluateExpression(tokens, index);
+            const valueResult = await this.evaluateExpression(tokens, nameResult.index);
             const varName = String(nameResult.value).toUpperCase();
             this.setVariable(varName, valueResult.value);
             return valueResult.index;
         }
 
         if (command === 'LOCAL') {
-            const nameResult = this.evaluateExpression(tokens, index);
+            const nameResult = await this.evaluateExpression(tokens, index);
             const varName = String(nameResult.value).toUpperCase();
             this.setLocalVariable(varName, null);
             return nameResult.index;
@@ -1287,32 +1287,32 @@ class LogoInterpreter {
 
         // ===== OUTPUT =====
         if (command === 'PRINT') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.print(this.formatValue(result.value));
             return result.index;
         }
 
         if (command === 'SHOW') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.print(this.formatValueShow(result.value));
             return result.index;
         }
 
         if (command === 'TYPE') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.printInline(this.formatValue(result.value));
             return result.index;
         }
 
         // ===== MULTIPLE TURTLES =====
         if (command === 'TELL') {
-            const result = this.evaluateExpression(tokens, index);
+            const result = await this.evaluateExpression(tokens, index);
             this.turtle.tell(result.value);
             return result.index;
         }
 
         if (command === 'ASK') {
-            const idResult = this.evaluateExpression(tokens, index);
+            const idResult = await this.evaluateExpression(tokens, index);
             index = idResult.index;
 
             if (tokens[index]?.type !== 'LBRACKET') {
@@ -1333,7 +1333,7 @@ class LogoInterpreter {
         if (proc) {
             const args = [];
             for (let i = 0; i < proc.params.length; i++) {
-                const argResult = this.evaluateExpression(tokens, index);
+                const argResult = await this.evaluateExpression(tokens, index);
                 args.push(argResult.value);
                 index = argResult.index;
             }
@@ -1421,8 +1421,8 @@ class LogoInterpreter {
         return tokens;
     }
 
-    evaluateCondition(tokens, index) {
-        const left = this.evaluateExpression(tokens, index);
+    async evaluateCondition(tokens, index) {
+        const left = await this.evaluateExpression(tokens, index);
         index = left.index;
 
         if (index >= tokens.length) {
@@ -1432,7 +1432,7 @@ class LogoInterpreter {
         const op = tokens[index];
         if (op.type === 'COMPARISON') {
             index++;
-            const right = this.evaluateExpression(tokens, index);
+            const right = await this.evaluateExpression(tokens, index);
             let result;
             switch (op.value) {
                 case '=': result = left.value === right.value; break;
