@@ -361,8 +361,7 @@ class LogoLabApp {
         this.soundIcon = document.getElementById('sound-icon');
         this.soundEnabled = localStorage.getItem('logolab-sound') !== 'false';
 
-        // Tutorial progress
-        this.tutorialProgress = JSON.parse(localStorage.getItem('logolab-tutorial-progress') || '{}');
+        // Tutorial progress UI elements
         this.progressText = document.getElementById('progress-text');
         this.progressFill = document.getElementById('progress-fill');
 
@@ -872,17 +871,17 @@ class LogoLabApp {
             let lessonHtml = this.tutorialManager.getLessonContent(lessonNum);
 
             // Add "Mark Complete" button at the end if not already completed
-            if (!this.tutorialProgress[lessonNum]) {
+            if (!this.tutorialManager.isComplete(lessonNum)) {
                 lessonHtml += `
                     <div class="mark-complete-section">
                         <button class="btn btn-success mark-complete" data-lesson="${lessonNum}">
-                            ✓ Mark Lesson ${lessonNum} Complete
+                            Mark Lesson Complete
                         </button>
                     </div>`;
             } else {
                 lessonHtml += `
                     <div class="mark-complete-section completed-badge">
-                        <span>✓ Lesson completed!</span>
+                        <span class="completed-message">\u2713 Lesson completed!</span>
                     </div>`;
             }
 
@@ -1097,20 +1096,20 @@ class LogoLabApp {
 
     // Tutorial progress tracking
     updateTutorialProgress() {
-        const completedCount = Object.values(this.tutorialProgress).filter(v => v).length;
-        const total = 6;
+        const completedCount = this.tutorialManager.getCompletedCount();
+        const total = this.tutorialManager.getTotalLessons();
 
         if (this.progressText) {
-            this.progressText.textContent = `${completedCount}/${total} complete`;
+            this.progressText.textContent = `${completedCount}/${total} lessons completed`;
         }
         if (this.progressFill) {
             this.progressFill.style.width = `${(completedCount / total) * 100}%`;
         }
 
-        // Update tutorial items with checkmarks
+        // Update tutorial items with completed class (CSS handles checkmark display)
         document.querySelectorAll('.tutorial-item').forEach(item => {
-            const lesson = item.dataset.lesson;
-            if (this.tutorialProgress[lesson]) {
+            const lesson = parseInt(item.dataset.lesson);
+            if (this.tutorialManager.isComplete(lesson)) {
                 item.classList.add('completed');
             } else {
                 item.classList.remove('completed');
@@ -1119,8 +1118,7 @@ class LogoLabApp {
     }
 
     markLessonComplete(lessonNum) {
-        this.tutorialProgress[lessonNum] = true;
-        localStorage.setItem('logolab-tutorial-progress', JSON.stringify(this.tutorialProgress));
+        this.tutorialManager.markComplete(lessonNum);
         this.updateTutorialProgress();
         this.playSound('success');
     }

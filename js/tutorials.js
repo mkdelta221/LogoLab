@@ -365,6 +365,76 @@ REPEAT 20 [
 class TutorialManager {
     constructor() {
         this.currentLesson = 1;
+        this.completedLessons = this.loadProgress();
+    }
+
+    /**
+     * Load progress from localStorage
+     * @returns {Set<number>} Set of completed lesson numbers
+     */
+    loadProgress() {
+        try {
+            const stored = localStorage.getItem('logolab_tutorial_progress');
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                return new Set(parsed);
+            }
+        } catch (e) {
+            console.warn('Could not load tutorial progress:', e);
+        }
+        return new Set();
+    }
+
+    /**
+     * Save progress to localStorage
+     */
+    saveProgress() {
+        try {
+            const arr = Array.from(this.completedLessons);
+            localStorage.setItem('logolab_tutorial_progress', JSON.stringify(arr));
+        } catch (e) {
+            console.warn('Could not save tutorial progress:', e);
+        }
+    }
+
+    /**
+     * Get overall progress
+     * @returns {Object} Object with completed array and total count
+     */
+    getProgress() {
+        return {
+            completed: Array.from(this.completedLessons).sort((a, b) => a - b),
+            total: this.getTotalLessons()
+        };
+    }
+
+    /**
+     * Mark a lesson as completed
+     * @param {number} lessonNum - The lesson number to mark complete
+     */
+    markComplete(lessonNum) {
+        const num = Number(lessonNum);
+        if (num >= 1 && num <= this.getTotalLessons()) {
+            this.completedLessons.add(num);
+            this.saveProgress();
+        }
+    }
+
+    /**
+     * Check if a lesson is complete
+     * @param {number} lessonNum - The lesson number to check
+     * @returns {boolean} True if the lesson is complete
+     */
+    isComplete(lessonNum) {
+        return this.completedLessons.has(Number(lessonNum));
+    }
+
+    /**
+     * Get the number of completed lessons
+     * @returns {number} Count of completed lessons
+     */
+    getCompletedCount() {
+        return this.completedLessons.size;
     }
 
     getLesson(lessonNum) {
