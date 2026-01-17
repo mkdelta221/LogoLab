@@ -217,18 +217,18 @@ PU SETPOS [-150 -100] PD
 SETPC "blue
 CHASE 120 80 50
 
-PRINT "Caught\ the\ target!`,
+PRINT "Caught\\ the\\ target!`,
 
     interactive: `; Interactive Art - Ask for user input!
 ; Uses READWORD for personalized art
 
-MAKE "name READWORD "What\ is\ your\ name?
-MAKE "color READWORD "Pick\ a\ color:
+MAKE "name READWORD "What\\ is\\ your\\ name?
+MAKE "color READWORD "Pick\\ a\\ color:
 
 ; Draw a personalized message
 SETPC :color
-PRINT WORD "Hello\  :name
-PRINT WORD "Drawing\ in\  UPPERCASE :color
+PRINT WORD "Hello\\  :name
+PRINT WORD "Drawing\\ in\\  UPPERCASE :color
 
 ; Create a pattern based on name length
 MAKE "size COUNT :name
@@ -239,7 +239,7 @@ REPEAT 8 [
   RT 45
 ]
 
-PRINT WORD "Made\ for\  :name`,
+PRINT WORD "Made\\ for\\  :name`,
 
     randomart: `; Random Color Art Generator
 ; Uses RANDOM for unique patterns every time
@@ -269,23 +269,23 @@ REPEAT 5 [
   BURST 20 + RANDOM 40
 ]
 
-PRINT "Every\ run\ is\ unique!
+PRINT "Every\\ run\\ is\\ unique!
 HT`,
 
     mirror: `; Mirror Text - Shows REVERSE in action
 ; Demonstrates string manipulation
 
-MAKE "word READWORD "Enter\ a\ word:
+MAKE "word READWORD "Enter\\ a\\ word:
 
-PRINT WORD "Original:\  :word
-PRINT WORD "Reversed:\  REVERSE :word
+PRINT WORD "Original:\\  :word
+PRINT WORD "Reversed:\\  REVERSE :word
 
 ; Check if palindrome
 IF :word = REVERSE :word [
-  PRINT "It's\ a\ palindrome!
+  PRINT "It's\\ a\\ palindrome!
   SETPC "green
 ] [
-  PRINT "Not\ a\ palindrome
+  PRINT "Not\\ a\\ palindrome
   SETPC "blue
 ]
 
