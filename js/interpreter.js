@@ -432,6 +432,22 @@ class LogoInterpreter {
 
         // Parenthesized expression
         if (token.type === 'LPAREN') {
+            // Check if next token is a function that supports variable args
+            // FMS Logo allows (LIST a b c ...) with any number of arguments
+            const nextToken = tokens[index + 1];
+            if (nextToken && nextToken.type === 'WORD') {
+                const funcName = nextToken.value.toUpperCase();
+                if (['LIST', 'WORD', 'SENTENCE', 'SE'].includes(funcName)) {
+                    // Handle special form: (LIST a b c ...)
+                    const result = await this.evaluateVariadicFunction(funcName, tokens, index + 2);
+                    // result.index should be at RPAREN
+                    if (result.index >= tokens.length || tokens[result.index].type !== 'RPAREN') {
+                        throw new Error("You opened ( but forgot to close it with )");
+                    }
+                    return { value: result.value, index: result.index + 1 };
+                }
+            }
+            // Normal parenthesized expression
             const result = await this.parseAddSub(tokens, index + 1);
             if (result.index >= tokens.length || tokens[result.index].type !== 'RPAREN') {
                 throw new Error("You opened ( but forgot to close it with )");
@@ -880,6 +896,49 @@ class LogoInterpreter {
         }
 
         throw new Error(`I don't know the function "${funcName}". Check your spelling!`);
+    }
+
+    /**
+     * Evaluate a variadic function call inside parentheses.
+     * Collects all arguments until the closing paren.
+     * Supports: LIST, WORD, SENTENCE/SE
+     * Example: (LIST 1 2 3 4) -> [1, 2, 3, 4]
+     */
+    async evaluateVariadicFunction(funcName, tokens, index) {
+        const items = [];
+
+        // Collect all arguments until we hit RPAREN
+        while (index < tokens.length && tokens[index].type !== 'RPAREN') {
+            const result = await this.evaluateExpression(tokens, index);
+            items.push(result.value);
+            index = result.index;
+        }
+
+        // Return based on function type
+        if (funcName === 'LIST') {
+            return { value: items, index };
+        }
+
+        if (funcName === 'WORD') {
+            // Concatenate all items as strings
+            return { value: items.map(String).join(''), index };
+        }
+
+        if (funcName === 'SENTENCE' || funcName === 'SE') {
+            // Flatten all items into a single list
+            const result = [];
+            for (const item of items) {
+                if (Array.isArray(item)) {
+                    result.push(...item);
+                } else {
+                    result.push(item);
+                }
+            }
+            return { value: result, index };
+        }
+
+        // Fallback - return as list
+        return { value: items, index };
     }
 
     isTruthy(value) {
