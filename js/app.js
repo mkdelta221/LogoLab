@@ -338,6 +338,7 @@ class LogoLabApp {
         this.btnRedo = document.getElementById('btn-redo');
         this.btnGrid = document.getElementById('btn-grid');
         this.btnLearn = document.getElementById('btn-learn');
+        this.btnLibrary = document.getElementById('btn-library');
         this.btnTheme = document.getElementById('btn-theme');
         this.btnToggleVars = document.getElementById('btn-toggle-vars');
         this.fileInput = document.getElementById('file-input');
@@ -351,6 +352,14 @@ class LogoLabApp {
         this.tutorialsModal = document.getElementById('tutorials-modal');
         this.shareModal = document.getElementById('share-modal');
         this.accessibilityModal = document.getElementById('accessibility-modal');
+        this.libraryModal = document.getElementById('library-modal');
+
+        // Library UI elements
+        this.libraryGrid = document.getElementById('library-grid');
+        this.librarySearch = document.getElementById('library-search');
+        this.btnSaveToLibrary = document.getElementById('btn-save-to-library');
+        this.btnCloseLibrary = document.getElementById('btn-close-library');
+        this.currentLibraryFilter = 'all';
 
         // Theme
         this.themeIcon = document.getElementById('theme-icon');
@@ -500,6 +509,45 @@ class LogoLabApp {
             this.btnLearn.addEventListener('click', () => this.showTutorials());
         }
 
+        // Library button
+        if (this.btnLibrary) {
+            this.btnLibrary.addEventListener('click', () => this.showLibrary());
+        }
+
+        // Library modal events
+        if (this.btnCloseLibrary) {
+            this.btnCloseLibrary.addEventListener('click', () => this.hideLibrary());
+        }
+        if (this.btnSaveToLibrary) {
+            this.btnSaveToLibrary.addEventListener('click', () => this.saveCurrentToLibrary());
+        }
+        if (this.librarySearch) {
+            this.librarySearch.addEventListener('input', (e) => {
+                this.renderLibrary(this.currentLibraryFilter, e.target.value);
+            });
+        }
+        if (this.libraryModal) {
+            // Category button clicks
+            this.libraryModal.querySelectorAll('.category-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    this.libraryModal.querySelectorAll('.category-btn').forEach(b => {
+                        b.classList.remove('active');
+                        b.setAttribute('aria-selected', 'false');
+                    });
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-selected', 'true');
+                    this.currentLibraryFilter = btn.dataset.cat;
+                    this.renderLibrary(this.currentLibraryFilter, this.librarySearch?.value || '');
+                });
+            });
+            // Close on backdrop click
+            this.libraryModal.addEventListener('click', (e) => {
+                if (e.target === this.libraryModal) {
+                    this.hideLibrary();
+                }
+            });
+        }
+
         // Theme toggle button
         if (this.btnTheme) {
             this.btnTheme.addEventListener('click', () => this.toggleTheme());
@@ -633,6 +681,11 @@ class LogoLabApp {
                     this.redo();
                 }
             }
+            // Ctrl+L to open library
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                this.showLibrary();
+            }
             // Escape to stop or close modals
             if (e.key === 'Escape') {
                 if (!this.helpModal.classList.contains('hidden')) {
@@ -641,6 +694,8 @@ class LogoLabApp {
                     this.hideExamples();
                 } else if (this.tutorialsModal && !this.tutorialsModal.classList.contains('hidden')) {
                     this.hideTutorials();
+                } else if (this.libraryModal && !this.libraryModal.classList.contains('hidden')) {
+                    this.hideLibrary();
                 } else if (this.shareModal && !this.shareModal.classList.contains('hidden')) {
                     this.hideShareModal();
                 } else if (this.accessibilityModal && !this.accessibilityModal.classList.contains('hidden')) {
@@ -861,6 +916,178 @@ class LogoLabApp {
             this.removeFocusTrap();
             if (this.lastFocusedElement) this.lastFocusedElement.focus();
         }
+    }
+
+    // ============== PROCEDURE LIBRARY ==============
+
+    showLibrary() {
+        if (this.libraryModal) {
+            this.lastFocusedElement = document.activeElement;
+            this.libraryModal.classList.remove('hidden');
+            this.currentLibraryFilter = 'all';
+            if (this.librarySearch) this.librarySearch.value = '';
+            // Reset category buttons
+            this.libraryModal.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+                if (btn.dataset.cat === 'all') {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-selected', 'true');
+                }
+            });
+            this.renderLibrary();
+            // Focus search box
+            if (this.librarySearch) this.librarySearch.focus();
+            this.trapFocus(this.libraryModal);
+        }
+    }
+
+    hideLibrary() {
+        if (this.libraryModal) {
+            this.libraryModal.classList.add('hidden');
+            this.removeFocusTrap();
+            if (this.lastFocusedElement) this.lastFocusedElement.focus();
+        }
+    }
+
+    renderLibrary(filter = 'all', search = '') {
+        if (!this.libraryGrid) return;
+
+        const library = this.storage.getLibrary();
+        this.libraryGrid.innerHTML = '';
+
+        const searchLower = search.toLowerCase();
+        const procedures = Object.values(library)
+            .filter(proc => {
+                if (filter !== 'all' && proc.category !== filter) return false;
+                if (searchLower && !proc.name.toLowerCase().includes(searchLower) &&
+                    !proc.description.toLowerCase().includes(searchLower)) return false;
+                return true;
+            })
+            .sort((a, b) => {
+                // Sort built-in first, then by name
+                if (a.builtin !== b.builtin) return a.builtin ? -1 : 1;
+                return a.name.localeCompare(b.name);
+            });
+
+        if (procedures.length === 0) {
+            this.libraryGrid.innerHTML = `
+                <div class="library-empty">
+                    <p>No procedures found.</p>
+                    ${filter === 'my' ? '<p>Save your own procedures using the button below!</p>' : ''}
+                </div>`;
+            return;
+        }
+
+        procedures.forEach(proc => {
+            const card = document.createElement('div');
+            card.className = 'library-card';
+            card.setAttribute('role', 'listitem');
+            card.innerHTML = `
+                <div class="library-card-header">
+                    <h3>${this.escapeHtml(proc.name)}</h3>
+                    ${proc.builtin ? '<span class="badge badge-builtin">Built-in</span>' : '<span class="badge badge-user">Custom</span>'}
+                </div>
+                <p class="library-card-desc">${this.escapeHtml(proc.description)}</p>
+                <pre class="library-card-code">${this.escapeHtml(proc.code)}</pre>
+                <div class="library-card-actions">
+                    <button class="btn btn-primary btn-small btn-insert" data-name="${this.escapeHtml(proc.name)}" aria-label="Insert ${this.escapeHtml(proc.name)} into editor">
+                        Insert
+                    </button>
+                    ${!proc.builtin ? `<button class="btn btn-danger btn-small btn-delete" data-name="${this.escapeHtml(proc.name)}" aria-label="Delete ${this.escapeHtml(proc.name)}">Delete</button>` : ''}
+                </div>
+            `;
+
+            // Add click handlers
+            card.querySelector('.btn-insert').addEventListener('click', () => {
+                this.insertProcedure(proc.name);
+            });
+
+            const deleteBtn = card.querySelector('.btn-delete');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', () => {
+                    if (confirm(`Delete "${proc.name}" from your library?`)) {
+                        this.storage.removeFromLibrary(proc.name);
+                        this.renderLibrary(this.currentLibraryFilter, this.librarySearch?.value || '');
+                        this.showOutput(`Removed ${proc.name} from library`);
+                    }
+                });
+            }
+
+            this.libraryGrid.appendChild(card);
+        });
+    }
+
+    insertProcedure(name) {
+        const library = this.storage.getLibrary();
+        const proc = library[name.toUpperCase()];
+        if (proc) {
+            const currentCode = this.editor.getValue();
+            const separator = currentCode.trim() ? '\n\n' : '';
+            this.editor.setValue(currentCode + separator + proc.code);
+            this.hideLibrary();
+            this.showOutput(`Added ${proc.name} to your code. Don't forget to call it!`);
+            this.playSound('success');
+        }
+    }
+
+    saveCurrentToLibrary() {
+        const code = this.editor.getValue();
+        const procedures = this.extractProcedures(code);
+
+        if (procedures.length === 0) {
+            this.showError('No procedures found! Define procedures with TO...END first.');
+            this.playSound('error');
+            return;
+        }
+
+        let saved = 0;
+        procedures.forEach(proc => {
+            if (this.storage.saveToLibrary({
+                name: proc.name,
+                code: proc.code,
+                category: 'my'
+            })) {
+                saved++;
+            }
+        });
+
+        this.renderLibrary(this.currentLibraryFilter, this.librarySearch?.value || '');
+        this.showOutput(`Saved ${saved} procedure${saved !== 1 ? 's' : ''} to library!`);
+        this.playSound('success');
+
+        // Switch to "My Procedures" category to show the saved ones
+        if (saved > 0) {
+            this.currentLibraryFilter = 'my';
+            this.libraryModal.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+                if (btn.dataset.cat === 'my') {
+                    btn.classList.add('active');
+                    btn.setAttribute('aria-selected', 'true');
+                }
+            });
+            this.renderLibrary('my', '');
+        }
+    }
+
+    extractProcedures(code) {
+        const regex = /TO\s+(\w+)([\s\S]*?)END/gi;
+        const procedures = [];
+        let match;
+        while ((match = regex.exec(code)) !== null) {
+            procedures.push({
+                name: match[1].toUpperCase(),
+                code: match[0]
+            });
+        }
+        return procedures;
+    }
+
+    escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     loadTutorialLesson(lessonNum) {

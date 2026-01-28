@@ -7,6 +7,7 @@ class StorageManager {
     constructor() {
         this.storageKey = 'logolab_projects';
         this.autoSaveKey = 'logolab_autosave';
+        this.libraryKey = 'logolab_library';
     }
 
     // Auto-save current code to localStorage
@@ -150,6 +151,149 @@ class StorageManager {
     clearAll() {
         localStorage.removeItem(this.storageKey);
         localStorage.removeItem(this.autoSaveKey);
+    }
+
+    // ============== PROCEDURE LIBRARY ==============
+
+    // Get all library procedures (built-in + user saved)
+    getLibrary() {
+        try {
+            const stored = localStorage.getItem(this.libraryKey);
+            if (stored) {
+                const userLibrary = JSON.parse(stored);
+                // Merge with built-in procedures (built-ins always fresh)
+                return { ...this.getBuiltinProcedures(), ...userLibrary };
+            }
+        } catch (e) {
+            console.warn('Load library failed:', e);
+        }
+        return this.getBuiltinProcedures();
+    }
+
+    // Save a procedure to the library
+    saveToLibrary(proc) {
+        try {
+            // Get only user procedures (not built-ins)
+            const stored = localStorage.getItem(this.libraryKey);
+            const userLibrary = stored ? JSON.parse(stored) : {};
+
+            userLibrary[proc.name.toUpperCase()] = {
+                name: proc.name.toUpperCase(),
+                code: proc.code,
+                description: proc.description || 'User-defined procedure',
+                category: proc.category || 'my',
+                builtin: false,
+                created: Date.now()
+            };
+
+            localStorage.setItem(this.libraryKey, JSON.stringify(userLibrary));
+            return true;
+        } catch (e) {
+            console.warn('Save to library failed:', e);
+            return false;
+        }
+    }
+
+    // Remove a procedure from the library
+    removeFromLibrary(name) {
+        try {
+            const stored = localStorage.getItem(this.libraryKey);
+            if (stored) {
+                const userLibrary = JSON.parse(stored);
+                const upperName = name.toUpperCase();
+                if (userLibrary[upperName] && !userLibrary[upperName].builtin) {
+                    delete userLibrary[upperName];
+                    localStorage.setItem(this.libraryKey, JSON.stringify(userLibrary));
+                    return true;
+                }
+            }
+        } catch (e) {
+            console.warn('Remove from library failed:', e);
+        }
+        return false;
+    }
+
+    // Built-in procedures that come pre-loaded
+    getBuiltinProcedures() {
+        return {
+            'SQUARE': {
+                name: 'SQUARE',
+                code: 'TO SQUARE :size\n  REPEAT 4 [FD :size RT 90]\nEND',
+                description: 'Draw a square of given size',
+                category: 'shapes',
+                builtin: true
+            },
+            'TRIANGLE': {
+                name: 'TRIANGLE',
+                code: 'TO TRIANGLE :size\n  REPEAT 3 [FD :size RT 120]\nEND',
+                description: 'Draw an equilateral triangle',
+                category: 'shapes',
+                builtin: true
+            },
+            'POLYGON': {
+                name: 'POLYGON',
+                code: 'TO POLYGON :sides :size\n  REPEAT :sides [FD :size RT 360 / :sides]\nEND',
+                description: 'Draw any regular polygon',
+                category: 'shapes',
+                builtin: true
+            },
+            'STAR': {
+                name: 'STAR',
+                code: 'TO STAR :size\n  REPEAT 5 [FD :size RT 144]\nEND',
+                description: 'Draw a 5-pointed star',
+                category: 'shapes',
+                builtin: true
+            },
+            'HEXAGON': {
+                name: 'HEXAGON',
+                code: 'TO HEXAGON :size\n  REPEAT 6 [FD :size RT 60]\nEND',
+                description: 'Draw a hexagon',
+                category: 'shapes',
+                builtin: true
+            },
+            'SPIRAL': {
+                name: 'SPIRAL',
+                code: 'TO SPIRAL :size\n  IF :size > 200 [STOP]\n  FD :size RT 91\n  SPIRAL :size + 2\nEND',
+                description: 'Recursive spiral pattern',
+                category: 'patterns',
+                builtin: true
+            },
+            'SQUIRAL': {
+                name: 'SQUIRAL',
+                code: 'TO SQUIRAL :size :angle\n  IF :size > 200 [STOP]\n  FD :size RT :angle\n  SQUIRAL :size + 3 :angle\nEND',
+                description: 'Square spiral with custom angle',
+                category: 'patterns',
+                builtin: true
+            },
+            'FLOWER': {
+                name: 'FLOWER',
+                code: 'TO FLOWER :petals :size\n  REPEAT :petals [\n    REPEAT 2 [FD :size RT 60 FD :size RT 120]\n    RT 360 / :petals\n  ]\nEND',
+                description: 'Draw a flower with given petals',
+                category: 'patterns',
+                builtin: true
+            },
+            'TREE': {
+                name: 'TREE',
+                code: 'TO TREE :size\n  IF :size < 5 [STOP]\n  FD :size\n  LT 30 TREE :size * 0.7\n  RT 60 TREE :size * 0.7\n  LT 30\n  BK :size\nEND',
+                description: 'Recursive fractal tree',
+                category: 'patterns',
+                builtin: true
+            },
+            'RANDOMCOLOR': {
+                name: 'RANDOMCOLOR',
+                code: 'TO RANDOMCOLOR\n  OUTPUT (LIST RANDOM 256 RANDOM 256 RANDOM 256)\nEND',
+                description: 'Returns a random RGB color',
+                category: 'colors',
+                builtin: true
+            },
+            'RAINBOW': {
+                name: 'RAINBOW',
+                code: 'TO RAINBOW :n\n  ; Sets pen to rainbow color based on n (0-360)\n  LOCAL "r LOCAL "g LOCAL "b\n  MAKE "r 128 + 127 * SIN :n\n  MAKE "g 128 + 127 * SIN :n + 120\n  MAKE "b 128 + 127 * SIN :n + 240\n  SETPC (LIST INT :r INT :g INT :b)\nEND',
+                description: 'Set pen color based on angle (0-360)',
+                category: 'colors',
+                builtin: true
+            }
+        };
     }
 }
 

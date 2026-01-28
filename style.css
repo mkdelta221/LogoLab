@@ -1473,3 +1473,228 @@ body.light-theme .token-procedure { color: #795e26; }
         transition: none !important;
     }
 }
+
+/* ============== PROCEDURE LIBRARY ============== */
+
+.library-body {
+    display: flex;
+    gap: 20px;
+    min-height: 450px;
+    max-height: 60vh;
+}
+
+.library-sidebar {
+    width: 160px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.library-search {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-secondary);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.library-search:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.library-search::placeholder {
+    color: var(--text-secondary);
+}
+
+.library-categories {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.category-btn {
+    text-align: left;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 14px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.category-btn:hover {
+    background: var(--bg-tertiary);
+}
+
+.category-btn.active {
+    background: var(--accent);
+    color: white;
+    font-weight: 500;
+}
+
+.category-btn:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+/* Library Content Grid */
+.library-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.library-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.library-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-secondary);
+}
+
+.library-empty p {
+    margin: 8px 0;
+}
+
+/* Procedure Cards */
+.library-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.library-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.library-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.library-card-header h3 {
+    margin: 0;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--accent);
+    font-weight: 600;
+}
+
+.badge {
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge-builtin {
+    background: var(--accent);
+    color: white;
+}
+
+.badge-user {
+    background: var(--success);
+    color: white;
+}
+
+.library-card-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.library-card-code {
+    background: var(--bg-primary);
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    max-height: 100px;
+    overflow-y: auto;
+    margin: 0;
+    white-space: pre;
+    line-height: 1.4;
+    border: 1px solid var(--border);
+}
+
+.library-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.library-card-actions .btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.btn-danger {
+    background: var(--error);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+/* Modal Footer for Library */
+.modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-secondary);
+    display: flex;
+    justify-content: center;
+}
+
+/* Mobile Responsive */
+@media (max-width: 700px) {
+    .library-body {
+        flex-direction: column;
+        min-height: auto;
+        max-height: none;
+    }
+
+    .library-sidebar {
+        width: 100%;
+    }
+
+    .library-categories {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .category-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .library-content {
+        max-height: 50vh;
+    }
+
+    .library-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -45,6 +45,9 @@
                 <button id="btn-learn" class="btn btn-learn" title="Interactive Tutorials" aria-label="Open interactive tutorials">
                     <span class="icon" aria-hidden="true">📚</span> <span>Learn</span>
                 </button>
+                <button id="btn-library" class="btn" title="Procedure Library (Ctrl+L)" aria-label="Open procedure library">
+                    <span class="icon" aria-hidden="true">📦</span> <span>Library</span>
+                </button>
                 <button id="btn-help" class="btn" title="Help (F1)" aria-label="Open help (F1)">
                     <span class="icon" aria-hidden="true">?</span> <span>Help</span>
                 </button>
@@ -470,6 +473,38 @@ PRINT DOUBLE 5  ; prints 10</pre>
                     <div class="tutorials-content" id="tutorial-content" role="tabpanel" aria-label="Tutorial content">
                         <!-- Content loaded dynamically -->
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Library Modal -->
+        <div id="library-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="library-modal-title">
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h2 id="library-modal-title">Procedure Library</h2>
+                    <button id="btn-close-library" class="btn-close" aria-label="Close library">&times;</button>
+                </div>
+                <div class="modal-body library-body">
+                    <div class="library-sidebar">
+                        <input type="text" id="library-search" class="library-search" placeholder="Search procedures..." aria-label="Search procedures">
+                        <div class="library-categories" role="tablist" aria-label="Procedure categories">
+                            <button class="category-btn active" data-cat="all" role="tab" aria-selected="true">All</button>
+                            <button class="category-btn" data-cat="shapes" role="tab" aria-selected="false">Shapes</button>
+                            <button class="category-btn" data-cat="patterns" role="tab" aria-selected="false">Patterns</button>
+                            <button class="category-btn" data-cat="colors" role="tab" aria-selected="false">Colors</button>
+                            <button class="category-btn" data-cat="my" role="tab" aria-selected="false">My Procedures</button>
+                        </div>
+                    </div>
+                    <div class="library-content">
+                        <div class="library-grid" id="library-grid" role="list">
+                            <!-- Procedure cards rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button id="btn-save-to-library" class="btn btn-primary">
+                        <span class="icon" aria-hidden="true">💾</span> Save Current Procedures to Library
+                    </button>
                 </div>
             </div>
         </div>
