@@ -1009,7 +1009,7 @@ class LogoLabApp {
                     if (confirm(`Delete "${proc.name}" from your library?`)) {
                         this.storage.removeFromLibrary(proc.name);
                         this.renderLibrary(this.currentLibraryFilter, this.librarySearch?.value || '');
-                        this.showOutput(`Removed ${proc.name} from library`);
+                        this.appendOutput(`Removed ${proc.name} from library\n`, false, 'info');
                     }
                 });
             }
@@ -1026,7 +1026,7 @@ class LogoLabApp {
             const separator = currentCode.trim() ? '\n\n' : '';
             this.editor.setValue(currentCode + separator + proc.code);
             this.hideLibrary();
-            this.showOutput(`Added ${proc.name} to your code. Don't forget to call it!`);
+            this.appendOutput(`Added ${proc.name} to your code. Don't forget to call it!\n`, false, 'info');
             this.playSound('success');
         }
     }
@@ -1036,7 +1036,7 @@ class LogoLabApp {
         const procedures = this.extractProcedures(code);
 
         if (procedures.length === 0) {
-            this.showError('No procedures found! Define procedures with TO...END first.');
+            this.appendOutput('No procedures found! Define procedures with TO...END first.\n', true);
             this.playSound('error');
             return;
         }
@@ -1053,7 +1053,7 @@ class LogoLabApp {
         });
 
         this.renderLibrary(this.currentLibraryFilter, this.librarySearch?.value || '');
-        this.showOutput(`Saved ${saved} procedure${saved !== 1 ? 's' : ''} to library!`);
+        this.appendOutput(`Saved ${saved} procedure${saved !== 1 ? 's' : ''} to library!\n`, false, 'info');
         this.playSound('success');
 
         // Switch to "My Procedures" category to show the saved ones
