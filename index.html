@@ -157,6 +157,7 @@ Try: REPEAT 4 [FD 100 RT 90]"></textarea>
                         <button class="help-tab" data-tab="procedures">Procedures</button>
                         <button class="help-tab" data-tab="math">Math</button>
                         <button class="help-tab" data-tab="lists">Lists</button>
+                        <button class="help-tab" data-tab="library">Library</button>
                     </div>
                     <div class="help-content">
                         <div id="help-movement" class="help-section active">
@@ -334,6 +335,70 @@ PRINT DOUBLE 5  ; prints 10</pre>
                                 <tr><td><code>NUMBER? value</code></td><td>True if value is a number</td></tr>
                                 <tr><td><code>WORD? value</code></td><td>True if value is a word</td></tr>
                                 <tr><td><code>MEMBER? item list</code></td><td>True if item is in list</td></tr>
+                            </table>
+                        </div>
+                        <div id="help-library" class="help-section">
+                            <h3>Procedure Library</h3>
+                            <p>The Library stores reusable procedures you can add to your code. Save time by reusing common shapes and patterns!</p>
+
+                            <h4>How to Open the Library</h4>
+                            <p>Click the <strong>📦 Library</strong> button in the toolbar, or press <strong>Ctrl+L</strong></p>
+
+                            <h4>Using a Library Procedure (Step by Step)</h4>
+                            <ol>
+                                <li>Open the Library (📦 button)</li>
+                                <li>Find a procedure you want (e.g., SQUARE)</li>
+                                <li>Click the <strong>Insert</strong> button</li>
+                                <li><strong>Important:</strong> The procedure code is now in your editor, but you need to <em>call it</em> to see something!</li>
+                            </ol>
+
+                            <h4>Example: Using SQUARE from the Library</h4>
+                            <pre>; After clicking "Insert" on SQUARE, your editor has:
+TO SQUARE :size
+  REPEAT 4 [FD :size RT 90]
+END
+
+; Now add this line below to actually DRAW:
+SQUARE 100</pre>
+                            <p><strong>Key point:</strong> Inserting adds the <em>definition</em>. You must <em>call</em> the procedure by name to draw!</p>
+
+                            <h4>More Examples After Inserting</h4>
+                            <pre>; Draw multiple squares in a row
+SQUARE 30
+RT 90 FD 50
+SQUARE 50
+RT 90 FD 70
+SQUARE 70
+
+; Make a pattern with SQUARE
+REPEAT 4 [SQUARE 60 RT 90]
+
+; Use POLYGON (needs 2 inputs: sides and size)
+POLYGON 5 80   ; draws a pentagon
+POLYGON 6 60   ; draws a hexagon
+
+; Colorful flowers using FLOWER
+SETPC "red
+FLOWER 6 40
+PU RT 90 FD 100 PD
+SETPC "blue
+FLOWER 8 30</pre>
+
+                            <h4>Saving Your Own Procedures</h4>
+                            <ol>
+                                <li>Write your procedure using <code>TO ... END</code></li>
+                                <li>Open the Library</li>
+                                <li>Click <strong>Save Current Procedures to Library</strong></li>
+                                <li>Your procedure appears in "My Procedures"!</li>
+                            </ol>
+
+                            <h4>Library Categories</h4>
+                            <table>
+                                <tr><td><strong>All</strong></td><td>Shows all available procedures</td></tr>
+                                <tr><td><strong>Shapes</strong></td><td>SQUARE, TRIANGLE, POLYGON, STAR, HEXAGON</td></tr>
+                                <tr><td><strong>Patterns</strong></td><td>SPIRAL, SQUIRAL, FLOWER, TREE</td></tr>
+                                <tr><td><strong>Colors</strong></td><td>RANDOMCOLOR, RAINBOW</td></tr>
+                                <tr><td><strong>My Procedures</strong></td><td>Procedures you have saved</td></tr>
                             </table>
                         </div>
                     </div>
