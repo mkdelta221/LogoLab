@@ -15,6 +15,9 @@ class LogoInterpreter {
         this.onOutput = null;
         this.onError = null;
         this.executionSpeed = 0; // ms delay between commands (0 = instant)
+        this.hintOwner = null; // function whose argument is currently being parsed
+        this.hintOwnerIndex = 0; // token index of that function's name
+        this.hintsShown = new Set(); // hint texts already shown this run
 
         // Watchdog - stops runaway programs from freezing the browser tab
         this.timeBudget = 10000; // ms of active running time before aborting
@@ -364,17 +367,23 @@ class LogoInterpreter {
     // ============== EXPRESSION EVALUATOR ==============
 
     async evaluateExpression(tokens, index) {
-        return this.parseComparison(tokens, index);
+        const result = await this.parseComparison(tokens, index);
+        if (this.hintOwner && result.infixAt !== undefined) {
+            this.hintAbsorbedArgument(tokens, index, result);
+        }
+        return result;
     }
 
     async parseComparison(tokens, index) {
         let result = await this.parseAddSub(tokens, index);
         let i = result.index;
         let value = result.value;
+        let infixAt = result.infixAt; // first operator this expression consumed
 
         while (i < tokens.length) {
             const token = tokens[i];
             if (token.type === 'COMPARISON') {
+                if (infixAt === undefined) infixAt = i;
                 i++;
                 const right = await this.parseAddSub(tokens, i);
                 i = right.index;
@@ -392,17 +401,19 @@ class LogoInterpreter {
             }
         }
 
-        return { value, index: i };
+        return { value, index: i, infixAt };
     }
 
     async parseAddSub(tokens, index) {
         let result = await this.parseMulDiv(tokens, index);
         let i = result.index;
         let value = result.value;
+        let infixAt = result.infixAt; // first operator this expression consumed
 
         while (i < tokens.length) {
             const token = tokens[i];
             if (token.type === 'OPERATOR' && (token.value === '+' || token.value === '-')) {
+                if (infixAt === undefined) infixAt = i;
                 i++;
                 const right = await this.parseMulDiv(tokens, i);
                 i = right.index;
@@ -416,17 +427,19 @@ class LogoInterpreter {
             }
         }
 
-        return { value, index: i };
+        return { value, index: i, infixAt };
     }
 
     async parseMulDiv(tokens, index) {
         let result = await this.parseUnary(tokens, index);
         let i = result.index;
         let value = result.value;
+        let infixAt; // first operator this expression consumed
 
         while (i < tokens.length) {
             const token = tokens[i];
             if (token.type === 'OPERATOR' && (token.value === '*' || token.value === '/')) {
+                if (infixAt === undefined) infixAt = i;
                 i++;
                 const right = await this.parseUnary(tokens, i);
                 i = right.index;
@@ -443,7 +456,7 @@ class LogoInterpreter {
             }
         }
 
-        return { value, index: i };
+        return { value, index: i, infixAt };
     }
 
     async parseUnary(tokens, index) {
@@ -519,7 +532,16 @@ class LogoInterpreter {
 
         // Function call or word
         if (token.type === 'WORD') {
-            return await this.evaluateFunction(tokens, index);
+            const prevOwner = this.hintOwner;
+            const prevOwnerIndex = this.hintOwnerIndex;
+            this.hintOwner = token.value;
+            this.hintOwnerIndex = index;
+            try {
+                return await this.evaluateFunction(tokens, index);
+            } finally {
+                this.hintOwner = prevOwner;
+                this.hintOwnerIndex = prevOwnerIndex;
+            }
         }
 
         throw new Error(`I don't understand "${token.value}" here. Check your code!`);
@@ -915,6 +937,8 @@ class LogoInterpreter {
             }
 
             let outputValue = null;
+            const prevOwner = this.hintOwner;
+            this.hintOwner = null; // the body's own expressions are not our arguments
             try {
                 await this.executeBlock(proc.body);
             } catch (e) {
@@ -926,6 +950,7 @@ class LogoInterpreter {
             } finally {
                 this.localScopes.pop();
                 this.callDepth--;
+                this.hintOwner = prevOwner;
             }
             return { value: outputValue, index };
         }
@@ -949,6 +974,8 @@ class LogoInterpreter {
      */
     async evaluateVariadicFunction(funcName, tokens, index) {
         const items = [];
+        const prevOwner = this.hintOwner;
+        this.hintOwner = null; // inside ( ) the grouping is already explicit
 
         // Collect all arguments until we hit RPAREN
         while (index < tokens.length && tokens[index].type !== 'RPAREN') {
@@ -956,6 +983,7 @@ class LogoInterpreter {
             items.push(result.value);
             index = result.index;
         }
+        this.hintOwner = prevOwner;
 
         // Return based on function type
         if (funcName === 'LIST') {
@@ -982,6 +1010,45 @@ class LogoInterpreter {
 
         // Fallback - return as list
         return { value: items, index };
+    }
+
+    /**
+     * Explain when a function quietly took a whole calculation as its input.
+     * Example: PRINT SQRT 9 + 16 prints 5 because SQRT takes all of 9 + 16.
+     * Only emits an extra line - the result itself is never changed.
+     */
+    hintAbsorbedArgument(tokens, argStart, result) {
+        if (tokens[argStart].type === 'LPAREN') {
+            return; // they already used ( ) - the grouping is on purpose
+        }
+        const argText = this.hintTokenText(tokens, argStart, result.index);
+        const callText = this.hintTokenText(tokens, this.hintOwnerIndex, result.infixAt);
+        const restText = this.hintTokenText(tokens, result.infixAt, result.index);
+        const hint = `${this.hintOwner} took ${argText} as its number. Write (${callText}) ${restText} if you meant that.`;
+        if (this.hintsShown.has(hint)) {
+            return;
+        }
+        this.hintsShown.add(hint);
+        if (this.onOutput) {
+            this.onOutput(hint, 'hint');
+        }
+    }
+
+    // Rebuild the source text for a range of tokens
+    hintTokenText(tokens, start, end) {
+        let text = '';
+        for (let i = start; i < end; i++) {
+            const token = tokens[i];
+            let piece = String(token.value);
+            if (token.type === 'VARREF') piece = ':' + token.value;
+            if (token.type === 'QUOTED') piece = '"' + token.value;
+            if (text && token.type !== 'RPAREN' && token.type !== 'RBRACKET' &&
+                !text.endsWith('(') && !text.endsWith('[')) {
+                text += ' ';
+            }
+            text += piece;
+        }
+        return text;
     }
 
     isTruthy(value) {
@@ -1039,6 +1106,8 @@ class LogoInterpreter {
         this.stepCount = 0;
         this.callDepth = 0;
         this.startTime = Date.now();
+        this.hintOwner = null;
+        this.hintsShown = new Set();
 
         try {
             const tokens = this.tokenize(code);
@@ -1635,6 +1704,8 @@ class LogoInterpreter {
         this.output = [];
         this.running = false;
         this.stopRequested = false;
+        this.hintOwner = null;
+        this.hintsShown = new Set();
     }
 }
 
