@@ -364,7 +364,35 @@ class LogoInterpreter {
     // ============== EXPRESSION EVALUATOR ==============
 
     async evaluateExpression(tokens, index) {
-        return this.parseAddSub(tokens, index);
+        return this.parseComparison(tokens, index);
+    }
+
+    async parseComparison(tokens, index) {
+        let result = await this.parseAddSub(tokens, index);
+        let i = result.index;
+        let value = result.value;
+
+        while (i < tokens.length) {
+            const token = tokens[i];
+            if (token.type === 'COMPARISON') {
+                i++;
+                const right = await this.parseAddSub(tokens, i);
+                i = right.index;
+                switch (token.value) {
+                    case '=': value = value === right.value; break;
+                    case '<': value = value < right.value; break;
+                    case '>': value = value > right.value; break;
+                    case '<=': value = value <= right.value; break;
+                    case '>=': value = value >= right.value; break;
+                    case '<>': value = value !== right.value; break;
+                    default: value = false;
+                }
+            } else {
+                break;
+            }
+        }
+
+        return { value, index: i };
     }
 
     async parseAddSub(tokens, index) {
@@ -458,7 +486,7 @@ class LogoInterpreter {
                 }
             }
             // Normal parenthesized expression
-            const result = await this.parseAddSub(tokens, index + 1);
+            const result = await this.parseComparison(tokens, index + 1);
             if (result.index >= tokens.length || tokens[result.index].type !== 'RPAREN') {
                 throw new Error("You opened ( but forgot to close it with )");
             }
@@ -1537,31 +1565,8 @@ class LogoInterpreter {
     }
 
     async evaluateCondition(tokens, index) {
-        const left = await this.evaluateExpression(tokens, index);
-        index = left.index;
-
-        if (index >= tokens.length) {
-            return left;
-        }
-
-        const op = tokens[index];
-        if (op.type === 'COMPARISON') {
-            index++;
-            const right = await this.evaluateExpression(tokens, index);
-            let result;
-            switch (op.value) {
-                case '=': result = left.value === right.value; break;
-                case '<': result = left.value < right.value; break;
-                case '>': result = left.value > right.value; break;
-                case '<=': result = left.value <= right.value; break;
-                case '>=': result = left.value >= right.value; break;
-                case '<>': result = left.value !== right.value; break;
-                default: result = false;
-            }
-            return { value: result, index: right.index };
-        }
-
-        return left;
+        // Comparisons are part of the expression grammar (parseComparison)
+        return this.evaluateExpression(tokens, index);
     }
 
     resolveColor(value) {
