@@ -10,11 +10,13 @@
     --accent-secondary: #45b7aa;
     --accent-danger: #ff6b6b;
     --accent-warning: #ffd93d;
+    --accent-success: #22c55e;
     --border-color: #3d3d52;
     --canvas-bg: #ffffff;
     --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     --radius: 6px;
     --radius-lg: 10px;
+    --font-mono: 'Monaco', 'Menlo', monospace;
 }
 
 * {
@@ -1494,15 +1496,15 @@ body.light-theme .token-procedure { color: #795e26; }
 .library-search {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius);
     background: var(--bg-secondary);
-    color: var(--text);
+    color: var(--text-primary);
     font-size: 14px;
 }
 
 .library-search:focus {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-primary);
     outline-offset: 1px;
 }
 
@@ -1521,7 +1523,7 @@ body.light-theme .token-procedure { color: #795e26; }
     padding: 10px 14px;
     border: none;
     background: transparent;
-    color: var(--text);
+    color: var(--text-primary);
     cursor: pointer;
     border-radius: var(--radius);
     font-size: 14px;
@@ -1533,13 +1535,13 @@ body.light-theme .token-procedure { color: #795e26; }
 }
 
 .category-btn.active {
-    background: var(--accent);
+    background: var(--accent-primary);
     color: white;
     font-weight: 500;
 }
 
 .category-btn:focus {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--accent-primary);
     outline-offset: 1px;
 }
 
@@ -1569,7 +1571,7 @@ body.light-theme .token-procedure { color: #795e26; }
 /* Procedure Cards */
 .library-card {
     background: var(--bg-secondary);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 16px;
     display: flex;
@@ -1579,7 +1581,7 @@ body.light-theme .token-procedure { color: #795e26; }
 }
 
 .library-card:hover {
-    border-color: var(--accent);
+    border-color: var(--accent-primary);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -1594,7 +1596,7 @@ body.light-theme .token-procedure { color: #795e26; }
     margin: 0;
     font-family: var(--font-mono);
     font-size: 16px;
-    color: var(--accent);
+    color: var(--accent-primary);
     font-weight: 600;
 }
 
@@ -1608,12 +1610,12 @@ body.light-theme .token-procedure { color: #795e26; }
 }
 
 .badge-builtin {
-    background: var(--accent);
+    background: var(--accent-primary);
     color: white;
 }
 
 .badge-user {
-    background: var(--success);
+    background: var(--accent-success);
     color: white;
 }
 
@@ -1635,7 +1637,7 @@ body.light-theme .token-procedure { color: #795e26; }
     margin: 0;
     white-space: pre;
     line-height: 1.4;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-color);
 }
 
 .library-card-actions {
@@ -1650,7 +1652,7 @@ body.light-theme .token-procedure { color: #795e26; }
 }
 
 .btn-danger {
-    background: var(--error);
+    background: var(--accent-danger);
     color: white;
 }
 
@@ -1661,7 +1663,7 @@ body.light-theme .token-procedure { color: #795e26; }
 /* Modal Footer for Library */
 .modal-footer {
     padding: 16px 20px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-color);
     background: var(--bg-secondary);
     display: flex;
     justify-content: center;
