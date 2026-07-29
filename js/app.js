@@ -1374,8 +1374,8 @@ class LogoLabApp {
             html += '<div class="var-section"><strong>Variables:</strong></div>';
             for (const name of varNames) {
                 const value = vars[name];
-                const displayValue = Array.isArray(value) ? `[${value.join(' ')}]` : value;
-                html += `<div class="var-item"><span class="var-name">:${name}</span> = <span class="var-value">${displayValue}</span></div>`;
+                const displayValue = Array.isArray(value) ? `[${value.map(v => this.escapeHtml(v)).join(' ')}]` : this.escapeHtml(value);
+                html += `<div class="var-item"><span class="var-name">:${this.escapeHtml(name)}</span> = <span class="var-value">${displayValue}</span></div>`;
             }
         }
 
@@ -1385,8 +1385,8 @@ class LogoLabApp {
             html += '<div class="var-section"><strong>Procedures:</strong></div>';
             for (const name of procNames) {
                 const proc = procs[name];
-                const params = proc.params.map(p => ':' + p).join(' ');
-                html += `<div class="var-item"><span class="var-name">TO ${name}</span> ${params}</div>`;
+                const params = proc.params.map(p => ':' + this.escapeHtml(p)).join(' ');
+                html += `<div class="var-item"><span class="var-name">TO ${this.escapeHtml(name)}</span> ${params}</div>`;
             }
         }
 
