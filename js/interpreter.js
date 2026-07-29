@@ -881,9 +881,9 @@ class LogoInterpreter {
                 } else if (e.type !== 'STOP') {
                     throw e;
                 }
+            } finally {
+                this.localScopes.pop();
             }
-
-            this.localScopes.pop();
             return { value: outputValue, index };
         }
 
@@ -992,6 +992,7 @@ class LogoInterpreter {
         this.running = true;
         this.stopRequested = false;
         this.output = [];
+        this.localScopes = [];
 
         try {
             const tokens = this.tokenize(code);
@@ -1275,19 +1276,21 @@ class LogoInterpreter {
             const start = startResult.value;
             const end = endResult.value;
 
-            if (step > 0) {
-                for (let i = start; i <= end && !this.stopRequested; i += step) {
-                    this.setLocalVariable(varName, i);
-                    await this.executeBlock(bodyBlock.list);
+            try {
+                if (step > 0) {
+                    for (let i = start; i <= end && !this.stopRequested; i += step) {
+                        this.setLocalVariable(varName, i);
+                        await this.executeBlock(bodyBlock.list);
+                    }
+                } else if (step < 0) {
+                    for (let i = start; i >= end && !this.stopRequested; i += step) {
+                        this.setLocalVariable(varName, i);
+                        await this.executeBlock(bodyBlock.list);
+                    }
                 }
-            } else if (step < 0) {
-                for (let i = start; i >= end && !this.stopRequested; i += step) {
-                    this.setLocalVariable(varName, i);
-                    await this.executeBlock(bodyBlock.list);
-                }
+            } finally {
+                this.localScopes.pop();
             }
-
-            this.localScopes.pop();
             return bodyBlock.endIndex;
         }
 
@@ -1408,9 +1411,9 @@ class LogoInterpreter {
                 if (e.type !== 'STOP' && e.type !== 'OUTPUT') {
                     throw e;
                 }
+            } finally {
+                this.localScopes.pop();
             }
-
-            this.localScopes.pop();
             return index;
         }
 
