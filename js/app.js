@@ -264,7 +264,7 @@ END
 ; Create multiple random bursts
 REPEAT 5 [
   PU
-  SETPOS LIST (RANDOM 300) - 150 (RANDOM 200) - 100
+  SETPOS (LIST (RANDOM 300) - 150 (RANDOM 200) - 100)
   PD
   BURST 20 + RANDOM 40
 ]

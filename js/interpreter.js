@@ -516,13 +516,13 @@ class LogoInterpreter {
 
         if (funcName in mathFuncs) {
             if (funcName === 'POWER') {
-                const arg1 = await this.evaluateExpression(tokens, index);
-                const arg2 = await this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.parseUnary(tokens, index);
+                const arg2 = await this.parseUnary(tokens, arg1.index);
                 return { value: Math.pow(arg1.value, arg2.value), index: arg2.index };
             }
             if (funcName === 'REMAINDER' || funcName === 'MODULO') {
-                const arg1 = await this.evaluateExpression(tokens, index);
-                const arg2 = await this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.parseUnary(tokens, index);
+                const arg2 = await this.parseUnary(tokens, arg1.index);
                 if (arg2.value === 0) {
                     throw new Error("Oops! You can't divide by zero.");
                 }
@@ -530,14 +530,14 @@ class LogoInterpreter {
             }
             if (funcName === 'MIN' || funcName === 'MAX') {
                 // MIN and MAX take two arguments
-                const arg1 = await this.evaluateExpression(tokens, index);
-                const arg2 = await this.evaluateExpression(tokens, arg1.index);
+                const arg1 = await this.parseUnary(tokens, index);
+                const arg2 = await this.parseUnary(tokens, arg1.index);
                 const result = funcName === 'MIN'
                     ? Math.min(arg1.value, arg2.value)
                     : Math.max(arg1.value, arg2.value);
                 return { value: result, index: arg2.index };
             }
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: mathFuncs[funcName](arg.value), index: arg.index };
         }
 
@@ -570,18 +570,18 @@ class LogoInterpreter {
         // String functions
         if (funcName === 'WORD') {
             // WORD combines two words into one
-            const arg1 = await this.evaluateExpression(tokens, index);
-            const arg2 = await this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.parseUnary(tokens, index);
+            const arg2 = await this.parseUnary(tokens, arg1.index);
             return { value: String(arg1.value) + String(arg2.value), index: arg2.index };
         }
         if (funcName === 'CHAR') {
             // CHAR returns character for ASCII code
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: String.fromCharCode(arg.value), index: arg.index };
         }
         if (funcName === 'ASCII') {
             // ASCII returns code for first character
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const str = String(arg.value);
             if (str.length === 0) {
                 throw new Error("ASCII needs a word with at least one character!");
@@ -589,18 +589,18 @@ class LogoInterpreter {
             return { value: str.charCodeAt(0), index: arg.index };
         }
         if (funcName === 'UPPERCASE') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: String(arg.value).toUpperCase(), index: arg.index };
         }
         if (funcName === 'LOWERCASE') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: String(arg.value).toLowerCase(), index: arg.index };
         }
 
         // Geometry functions
         if (funcName === 'TOWARDS') {
             // Returns angle from turtle to point
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             if (!Array.isArray(arg.value) || arg.value.length < 2) {
                 throw new Error("TOWARDS needs a point like [x y]");
             }
@@ -613,7 +613,7 @@ class LogoInterpreter {
         }
         if (funcName === 'DISTANCE') {
             // Returns distance from turtle to point
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             if (!Array.isArray(arg.value) || arg.value.length < 2) {
                 throw new Error("DISTANCE needs a point like [x y]");
             }
@@ -624,7 +624,7 @@ class LogoInterpreter {
 
         // List functions
         if (funcName === 'FIRST') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 if (list.length === 0) {
@@ -641,7 +641,7 @@ class LogoInterpreter {
             throw new Error('FIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'LAST') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 if (list.length === 0) {
@@ -658,7 +658,7 @@ class LogoInterpreter {
             throw new Error('LAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTFIRST' || funcName === 'BF') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.slice(1), index: arg.index };
@@ -669,7 +669,7 @@ class LogoInterpreter {
             throw new Error('BUTFIRST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'BUTLAST' || funcName === 'BL') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.slice(0, -1), index: arg.index };
@@ -680,7 +680,7 @@ class LogoInterpreter {
             throw new Error('BUTLAST needs a list like [1 2 3] or a word');
         }
         if (funcName === 'COUNT') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const list = arg.value;
             if (Array.isArray(list)) {
                 return { value: list.length, index: arg.index };
@@ -691,8 +691,8 @@ class LogoInterpreter {
             throw new Error('COUNT needs a list like [1 2 3] or a word');
         }
         if (funcName === 'ITEM') {
-            const idx = await this.evaluateExpression(tokens, index);
-            const list = await this.evaluateExpression(tokens, idx.index);
+            const idx = await this.parseUnary(tokens, index);
+            const list = await this.parseUnary(tokens, idx.index);
             const itemIndex = idx.value;
             if (Array.isArray(list.value)) {
                 if (list.value.length === 0) {
@@ -717,15 +717,15 @@ class LogoInterpreter {
         if (funcName === 'LIST') {
             const items = [];
             // Collect two items
-            const arg1 = await this.evaluateExpression(tokens, index);
+            const arg1 = await this.parseUnary(tokens, index);
             items.push(arg1.value);
-            const arg2 = await this.evaluateExpression(tokens, arg1.index);
+            const arg2 = await this.parseUnary(tokens, arg1.index);
             items.push(arg2.value);
             return { value: items, index: arg2.index };
         }
         if (funcName === 'SENTENCE' || funcName === 'SE') {
-            const arg1 = await this.evaluateExpression(tokens, index);
-            const arg2 = await this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.parseUnary(tokens, index);
+            const arg2 = await this.parseUnary(tokens, arg1.index);
             const result = [];
             if (Array.isArray(arg1.value)) {
                 result.push(...arg1.value);
@@ -740,16 +740,16 @@ class LogoInterpreter {
             return { value: result, index: arg2.index };
         }
         if (funcName === 'FPUT') {
-            const item = await this.evaluateExpression(tokens, index);
-            const list = await this.evaluateExpression(tokens, item.index);
+            const item = await this.parseUnary(tokens, index);
+            const list = await this.parseUnary(tokens, item.index);
             if (!Array.isArray(list.value)) {
                 throw new Error('FPUT needs a list: FPUT "hello [1 2 3] puts "hello at the front');
             }
             return { value: [item.value, ...list.value], index: list.index };
         }
         if (funcName === 'LPUT') {
-            const item = await this.evaluateExpression(tokens, index);
-            const list = await this.evaluateExpression(tokens, item.index);
+            const item = await this.parseUnary(tokens, index);
+            const list = await this.parseUnary(tokens, item.index);
             if (!Array.isArray(list.value)) {
                 throw new Error('LPUT needs a list: LPUT "hello [1 2 3] puts "hello at the end');
             }
@@ -758,7 +758,7 @@ class LogoInterpreter {
 
         // Predicates
         if (funcName === 'EMPTY?') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             if (Array.isArray(arg.value)) {
                 return { value: arg.value.length === 0, index: arg.index };
             }
@@ -768,20 +768,20 @@ class LogoInterpreter {
             return { value: false, index: arg.index };
         }
         if (funcName === 'LIST?') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: Array.isArray(arg.value), index: arg.index };
         }
         if (funcName === 'NUMBER?') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: typeof arg.value === 'number', index: arg.index };
         }
         if (funcName === 'WORD?') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: typeof arg.value === 'string', index: arg.index };
         }
         if (funcName === 'MEMBER?') {
-            const item = await this.evaluateExpression(tokens, index);
-            const list = await this.evaluateExpression(tokens, item.index);
+            const item = await this.parseUnary(tokens, index);
+            const list = await this.parseUnary(tokens, item.index);
             if (Array.isArray(list.value)) {
                 return { value: list.value.includes(item.value), index: list.index };
             }
@@ -791,7 +791,7 @@ class LogoInterpreter {
             return { value: false, index: list.index };
         }
         if (funcName === 'REVERSE') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             if (Array.isArray(arg.value)) {
                 return { value: [...arg.value].reverse(), index: arg.index };
             }
@@ -803,17 +803,17 @@ class LogoInterpreter {
 
         // Logic functions
         if (funcName === 'AND') {
-            const arg1 = await this.evaluateExpression(tokens, index);
-            const arg2 = await this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.parseUnary(tokens, index);
+            const arg2 = await this.parseUnary(tokens, arg1.index);
             return { value: this.isTruthy(arg1.value) && this.isTruthy(arg2.value), index: arg2.index };
         }
         if (funcName === 'OR') {
-            const arg1 = await this.evaluateExpression(tokens, index);
-            const arg2 = await this.evaluateExpression(tokens, arg1.index);
+            const arg1 = await this.parseUnary(tokens, index);
+            const arg2 = await this.parseUnary(tokens, arg1.index);
             return { value: this.isTruthy(arg1.value) || this.isTruthy(arg2.value), index: arg2.index };
         }
         if (funcName === 'NOT') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             return { value: !this.isTruthy(arg.value), index: arg.index };
         }
 
@@ -846,7 +846,7 @@ class LogoInterpreter {
 
         // THING - get variable value
         if (funcName === 'THING') {
-            const arg = await this.evaluateExpression(tokens, index);
+            const arg = await this.parseUnary(tokens, index);
             const varName = String(arg.value).toUpperCase();
             return { value: this.getVariable(varName), index: arg.index };
         }
