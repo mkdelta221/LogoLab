@@ -16,6 +16,16 @@ class LogoInterpreter {
         this.onError = null;
         this.executionSpeed = 0; // ms delay between commands (0 = instant)
 
+        // Watchdog - stops runaway programs from freezing the browser tab
+        this.timeBudget = 10000; // ms of active running time before aborting
+        this.maxCallDepth = 1000; // max nested procedure calls
+        this.maxWait = 5000; // ms cap for a single WAIT
+        this.stepCount = 0;
+        this.callDepth = 0;
+        this.startTime = 0;
+        this.delayTimeoutId = null;
+        this.delayResolve = null;
+
         // Built-in colors
         this.colors = {
             'black': [0, 0, 0],
@@ -859,6 +869,9 @@ class LogoInterpreter {
         // Check for user-defined procedure
         const proc = this.procedures[funcName];
         if (proc) {
+            if (this.callDepth >= this.maxCallDepth) {
+                throw new Error("Your procedure is calling itself too many times - did you forget a STOP?");
+            }
             const args = [];
             for (let i = 0; i < proc.params.length; i++) {
                 const argResult = await this.evaluateExpression(tokens, index);
@@ -867,6 +880,7 @@ class LogoInterpreter {
             }
 
             // Execute procedure and get output
+            this.callDepth++;
             this.localScopes.push({});
             for (let i = 0; i < proc.params.length; i++) {
                 this.setLocalVariable(proc.params[i], args[i]);
@@ -881,9 +895,10 @@ class LogoInterpreter {
                 } else if (e.type !== 'STOP') {
                     throw e;
                 }
+            } finally {
+                this.localScopes.pop();
+                this.callDepth--;
             }
-
-            this.localScopes.pop();
             return { value: outputValue, index };
         }
 
@@ -992,6 +1007,10 @@ class LogoInterpreter {
         this.running = true;
         this.stopRequested = false;
         this.output = [];
+        this.localScopes = [];
+        this.stepCount = 0;
+        this.callDepth = 0;
+        this.startTime = Date.now();
 
         try {
             const tokens = this.tokenize(code);
@@ -1008,10 +1027,34 @@ class LogoInterpreter {
 
     stop() {
         this.stopRequested = true;
+        // Cancel any pending delay (WAIT or animation) so stopping is immediate
+        if (this.delayTimeoutId !== null) {
+            clearTimeout(this.delayTimeoutId);
+            this.delayTimeoutId = null;
+        }
+        if (this.delayResolve) {
+            const resolve = this.delayResolve;
+            this.delayResolve = null;
+            resolve();
+        }
+    }
+
+    // Called for every executed command. Yields a macrotask every so often so
+    // the browser can process a Stop click (microtask-only awaits starve the
+    // event loop at instant speed), and aborts past the time budget.
+    async checkWatchdog() {
+        this.stepCount++;
+        if (this.stepCount % 1000 === 0) {
+            await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        if (!this.stopRequested && Date.now() - this.startTime > this.timeBudget) {
+            throw new Error("This program has been running for a very long time, so I stopped it to keep your browser happy. Check for a loop that never ends, or try fewer repeats!");
+        }
     }
 
     async executeTokens(tokens, index) {
         while (index < tokens.length && !this.stopRequested) {
+            await this.checkWatchdog();
             const token = tokens[index];
 
             if (token.type !== 'WORD') {
@@ -1033,7 +1076,9 @@ class LogoInterpreter {
 
             // Small delay for animation if needed
             if (this.executionSpeed > 0) {
+                const before = Date.now();
                 await this.delay(this.executionSpeed);
+                this.startTime += Date.now() - before; // animation time doesn't count toward the budget
             }
         }
 
@@ -1275,19 +1320,21 @@ class LogoInterpreter {
             const start = startResult.value;
             const end = endResult.value;
 
-            if (step > 0) {
-                for (let i = start; i <= end && !this.stopRequested; i += step) {
-                    this.setLocalVariable(varName, i);
-                    await this.executeBlock(bodyBlock.list);
+            try {
+                if (step > 0) {
+                    for (let i = start; i <= end && !this.stopRequested; i += step) {
+                        this.setLocalVariable(varName, i);
+                        await this.executeBlock(bodyBlock.list);
+                    }
+                } else if (step < 0) {
+                    for (let i = start; i >= end && !this.stopRequested; i += step) {
+                        this.setLocalVariable(varName, i);
+                        await this.executeBlock(bodyBlock.list);
+                    }
                 }
-            } else if (step < 0) {
-                for (let i = start; i >= end && !this.stopRequested; i += step) {
-                    this.setLocalVariable(varName, i);
-                    await this.executeBlock(bodyBlock.list);
-                }
+            } finally {
+                this.localScopes.pop();
             }
-
-            this.localScopes.pop();
             return bodyBlock.endIndex;
         }
 
@@ -1324,7 +1371,10 @@ class LogoInterpreter {
 
         if (command === 'WAIT') {
             const result = await this.evaluateExpression(tokens, index);
-            await this.delay(result.value);
+            const ms = Math.min(Math.max(0, result.value), this.maxWait);
+            const before = Date.now();
+            await this.delay(ms);
+            this.startTime += Date.now() - before; // waiting doesn't count toward the budget
             return result.index;
         }
 
@@ -1390,6 +1440,9 @@ class LogoInterpreter {
         // ===== USER PROCEDURE CALL =====
         const proc = this.procedures[command];
         if (proc) {
+            if (this.callDepth >= this.maxCallDepth) {
+                throw new Error("Your procedure is calling itself too many times - did you forget a STOP?");
+            }
             const args = [];
             for (let i = 0; i < proc.params.length; i++) {
                 const argResult = await this.evaluateExpression(tokens, index);
@@ -1397,6 +1450,7 @@ class LogoInterpreter {
                 index = argResult.index;
             }
 
+            this.callDepth++;
             this.localScopes.push({});
             for (let i = 0; i < proc.params.length; i++) {
                 this.setLocalVariable(proc.params[i], args[i]);
@@ -1408,9 +1462,10 @@ class LogoInterpreter {
                 if (e.type !== 'STOP' && e.type !== 'OUTPUT') {
                     throw e;
                 }
+            } finally {
+                this.localScopes.pop();
+                this.callDepth--;
             }
-
-            this.localScopes.pop();
             return index;
         }
 
@@ -1462,6 +1517,7 @@ class LogoInterpreter {
     }
 
     async executeBlock(items) {
+        await this.checkWatchdog(); // counts loop iterations even when the block is empty
         const tokens = this.flattenListToTokens(items);
         await this.executeTokens(tokens, 0);
     }
@@ -1557,7 +1613,14 @@ class LogoInterpreter {
     }
 
     delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise(resolve => {
+            this.delayResolve = resolve;
+            this.delayTimeoutId = setTimeout(() => {
+                this.delayTimeoutId = null;
+                this.delayResolve = null;
+                resolve();
+            }, ms);
+        });
     }
 
     reset() {
